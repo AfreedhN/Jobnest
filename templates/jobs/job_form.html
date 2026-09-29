@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% if is_edit %}Edit Job | {{ job.title }}{% else %}Post a Job{% endif %} | JobNest{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/job-form.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="job-create">
+    <div class="job-create__masthead">
+        <div class="container">
+            <a class="job-create__back" href="{% if is_edit %}{% url 'manage_jobs' %}{% else %}{% url 'jobs:job_list' %}{% endif %}">
+                <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                {% if is_edit %}Manage jobs{% else %}Job board{% endif %}
+            </a>
+            <p class="job-create__eyebrow">{% if is_edit %}Update job listing details{% else %}Bring your next teammate aboard{% endif %}</p>
+            <h1>{% if is_edit %}Edit Job{% else %}Post a Job{% endif %}</h1>
+            <p>{% if is_edit %}Keep your role requirements, salary, and details up to date.{% else %}Share the role details so the right candidates can find you.{% endif %}</p>
+        </div>
+    </div>
+
+    <div class="container job-create__content">
+        {% if has_verified_companies is False %}
+            <div class="message warning" style="margin-bottom: 24px; padding: 16px; border-radius: 8px; background: #fef3c7; color: #92400e; border: 1px solid #fde68a;">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <strong>No Verified Companies Available:</strong> Only companies with a verified status can post jobs. A company must be verified by an administrator before job postings can be published.
+            </div>
+        {% endif %}
+
+        <form class="job-create__form" method="post">
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+                <div class="job-create__error-summary" role="alert">
+                    {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="job-create__grid">
+                {% for field in form %}
+                    <div class="job-create__field{% if field.name == 'skills' or field.name == 'description' or field.name == 'requirements' or field.name == 'responsibilities' %} job-create__field--wide{% endif %}">
+                        <label for="{{ field.id_for_label }}">
+                            {{ field.label }}{% if field.field.required %}<span aria-hidden="true"> *</span>{% endif %}
+                        </label>
+                        {{ field }}
+                        {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
+                        {% for error in field.errors %}<span class="job-create__field-error" role="alert">{{ error }}</span>{% endfor %}
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="job-create__footer">
+                <p><span aria-hidden="true">*</span> Required fields</p>
+                <div>
+                    <a class="btn-secondary" href="{% if is_edit %}{% url 'manage_jobs' %}{% else %}{% url 'jobs:job_list' %}{% endif %}">Cancel</a>
+                    <button class="btn-primary" type="submit">
+                        {% if is_edit %}
+                            <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+                            Save changes
+                        {% else %}
+                            <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+                            Publish job
+                        {% endif %}
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

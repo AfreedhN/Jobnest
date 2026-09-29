@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Find Your Next Job | JobNest{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/job-list.css' %}">
+    <link rel="stylesheet" href="{% static 'css/listing-dialog.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<section class="job-board">
+    <div class="job-board__masthead">
+        <div class="container job-board__masthead-inner">
+            <div>
+                <p class="job-board__eyebrow">Make your next move</p>
+                <h1>Work that moves<br><span>you forward.</span></h1>
+            </div>
+            <p class="job-board__lede">Find a role that fits the way you want to work, learn, and live.</p>
+        </div>
+    </div>
+
+    <div class="container job-board__content">
+        <form class="job-filter" id="jobFilterForm" method="get">
+            <div class="job-filter__search">
+                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                <label class="sr-only" for="jobSearch">Role, company, or skill</label>
+                <input id="jobSearch" type="search" name="search" value="{{ search }}" placeholder="Role, company, or skill">
+            </div>
+            <div class="job-filter__location">
+                <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+                <label class="sr-only" for="jobLocation">Location</label>
+                <input id="jobLocation" type="search" name="location" value="{{ location }}" placeholder="City or region">
+            </div>
+            <label class="sr-only" for="jobCategory">Category</label>
+            <select id="jobCategory" name="category" onchange="this.form.submit()">
+                <option value="">All categories</option>
+                {% for category in categories %}
+                    <option value="{{ category.pk }}" {% if selected_category == category.pk|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>
+                {% endfor %}
+            </select>
+            <label class="sr-only" for="jobWorkMode">Work mode</label>
+            <select id="jobWorkMode" name="work_mode" onchange="this.form.submit()">
+                <option value="">Any work mode</option>
+                <option value="remote" {% if selected_work_mode == "remote" %}selected{% endif %}>Remote</option>
+                <option value="hybrid" {% if selected_work_mode == "hybrid" %}selected{% endif %}>Hybrid</option>
+                <option value="onsite" {% if selected_work_mode == "onsite" %}selected{% endif %}>On-site</option>
+            </select>
+            <label class="sr-only" for="jobType">Job type</label>
+            <select id="jobType" name="job_type" onchange="this.form.submit()">
+                <option value="">Any job type</option>
+                <option value="full-time" {% if selected_job_type == "full-time" %}selected{% endif %}>Full time</option>
+                <option value="part-time" {% if selected_job_type == "part-time" %}selected{% endif %}>Part time</option>
+                <option value="internship" {% if selected_job_type == "internship" %}selected{% endif %}>Internship</option>
+                <option value="contract" {% if selected_job_type == "contract" %}selected{% endif %}>Contract</option>
+            </select>
+            <button class="job-filter__submit" type="submit" aria-label="Search jobs">
+                <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+            </button>
+        </form>
+
+        <div class="job-board__results-heading">
+            <div>
+                <p class="job-board__eyebrow">The latest opportunities</p>
+                <h2>Open roles <span id="jobResultCount">{{ jobs|length }}</span></h2>
+            </div>
+            <div class="job-board__header-actions">
+                {% if search or role or company or skill or city or location or selected_category or selected_work_mode or selected_job_type %}
+                    <a class="job-board__clear" href="{% url 'jobs:job_list' %}"><i class="fa-solid fa-xmark" aria-hidden="true"></i> Clear filters</a>
+                {% endif %}
+                {% if is_recruiter %}
+                    <button class="job-board__add" type="button" data-open-dialog="addJobDialog" aria-haspopup="dialog">
+                        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                        Add Job
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="job-list" id="jobList">
+            {% for job in jobs %}
+                <article class="job-card" data-search="{{ job.title }} {{ job.company.name }} {{ job.skills }}">
+                    <a class="job-card__link" href="{% url 'jobs:job_detail' job.pk %}" aria-label="View {{ job.title }} at {{ job.company.name }}"></a>
+                    <div class="job-card__identity">
+                        {% if job.company.logo %}
+                            <img class="job-card__logo" src="{{ job.company.logo.url }}" alt="{{ job.company.name }} logo" loading="lazy">
+                        {% else %}
+                            <span class="job-card__monogram" aria-hidden="true">{{ job.company.name|slice:":1"|upper }}</span>
+                        {% endif %}
+                        <div>
+                            <p class="job-card__company">
+                                {{ job.company.name }}
+                                {% if job.company.is_verified %}
+                                    <i class="fa-solid fa-circle-check" title="Verified Company" style="color: #2563eb; font-size: 12px; margin-left: 3px;"></i>
+                                {% endif %}
+                            </p>
+                            <h3>{{ job.title }}</h3>
+                        </div>
+                    </div>
+                    <div class="job-card__details">
+                        <span><i class="fa-solid fa-location-dot" aria-hidden="true"></i>{{ job.location }}</span>
+                        <span><i class="fa-solid fa-house-laptop" aria-hidden="true"></i>{{ job.get_work_mode_display }}</span>
+                        <span><i class="fa-regular fa-clock" aria-hidden="true"></i>{{ job.get_job_type_display }}</span>
+                        <span><i class="fa-solid fa-users" aria-hidden="true"></i>{{ job.vacancies }} vacanc{{ job.vacancies|pluralize:"y,ies" }}</span>
+                        {% if job.category %}<span><i class="fa-solid fa-layer-group" aria-hidden="true"></i>{{ job.category.name }}</span>{% endif %}
+                    </div>
+                    <div class="job-card__summary">
+                        <p>{{ job.description|truncatechars:145 }}</p>
+                        <span class="job-card__salary">{{ job.salary_range }}</span>
+                    </div>
+                    <div class="job-card__footer">
+                        <span><i class="fa-regular fa-calendar" aria-hidden="true"></i> Posted {{ job.created_at|timesince }} ago</span>
+                        {% if job.application_deadline %}
+                            {% if job.is_past_deadline %}
+                                <span class="job-card__deadline expired" style="color: #dc2626; font-size: 12px; font-weight: 600;"><i class="fa-solid fa-clock-rotate-left"></i> Deadline passed</span>
+                            {% else %}
+                                <span class="job-card__deadline" style="color: #475569; font-size: 12px;"><i class="fa-regular fa-calendar-check"></i> Deadline: {{ job.application_deadline|date:"d M Y" }}</span>
+                            {% endif %}
+                        {% endif %}
+                        <span class="job-card__view">View role <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span>
+                    </div>
+                </article>
+            {% empty %}
+                <div class="job-empty">
+                    <span class="job-empty__icon"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span>
+                    <h3>No results found</h3>
+                    <p>No open roles found matching your search or filter criteria. Change your search or filters to see more opportunities.</p>
+                    <a href="{% url 'jobs:job_list' %}">Browse all jobs</a>
+                </div>
+            {% endfor %}
+        </div>
+        {% if jobs %}
+            <p class="job-empty job-empty--filtered" id="jobLiveEmpty" hidden>No results found matching your search. Try another keyword or filter.</p>
+        {% endif %}
+
+        {% if is_recruiter %}
+            <dialog class="listing-dialog" id="addJobDialog" aria-labelledby="addJobDialogTitle"{% if show_job_form %} data-reopen="true"{% endif %}>
+                <header class="listing-dialog__header">
+                    <div>
+                        <p class="job-board__eyebrow">Recruiter workspace</p>
+                        <h2 id="addJobDialogTitle">Add a job</h2>
+                        <p>Share the role details with candidates.</p>
+                    </div>
+                    <form method="dialog">
+                        <button class="listing-dialog__close" type="submit" aria-label="Close add job form">
+                            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                        </button>
+                    </form>
+                </header>
+                <form class="listing-dialog__form" method="post" action="{% url 'jobs:job_list' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_action" value="add_job">
+                    <div class="listing-dialog__fields">
+                        {% for field in job_form %}
+                            <div class="listing-dialog__field{% if field.name == 'skills' or field.name == 'description' or field.name == 'requirements' or field.name == 'responsibilities' %} listing-dialog__field--wide{% endif %}">
+                                {{ field.label_tag }}
+                                {{ field }}
+                                {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
+                                {% for error in field.errors %}<span class="listing-dialog__error" role="alert">{{ error }}</span>{% endfor %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <footer class="listing-dialog__footer">
+                        <button class="listing-dialog__cancel" type="button" data-close-dialog>Cancel</button>
+                        <button class="job-board__add" type="submit">
+                            <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+                            Publish Job
+                        </button>
+                    </footer>
+                </form>
+            </dialog>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'css/js/job-list.js' %}" defer></script>
+    <script src="{% static 'css/js/list-dialogs.js' %}" defer></script>
+{% endblock %}

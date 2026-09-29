@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+
+{% block title %}Application Details | JobNest{% endblock %}
+
+{% block content %}
+
+<section class="section">
+
+<div class="container">
+
+    <div class="page-header">
+
+        <span class="section-label">APPLICATION</span>
+
+        <h1>Application Details</h1>
+
+    </div>
+
+
+    <div class="application-detail-grid">
+
+        <main>
+
+            <div class="content-card">
+
+                <div class="application-title">
+
+                    <div class="company-logo">
+
+                        {% if application.job.company.logo %}
+
+                            <img src="{{ application.job.company.logo.url }}"
+                                 alt="{{ application.job.company.name }}">
+
+                        {% else %}
+
+                            <i class="fa-solid fa-building"></i>
+
+                        {% endif %}
+
+                    </div>
+
+                    <div>
+
+                        <h2>{{ application.job.title }}</h2>
+
+                        <p>
+                            {{ application.job.company.name }}
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <hr>
+
+
+                <h3>Cover Letter</h3>
+
+                <p>
+                    {{ application.cover_letter|default:"No cover letter added."|linebreaksbr }}
+                </p>
+
+
+                {% if application.additional_information %}
+
+                <h3>Additional Information</h3>
+
+                <p>
+                    {{ application.additional_information|linebreaksbr }}
+                </p>
+
+                {% endif %}
+
+            </div>
+
+
+            <div class="content-card">
+
+                <h2>Application Timeline</h2>
+
+                <div class="timeline">
+
+                    <div class="timeline-item active">
+
+                        <span></span>
+
+                        <div>
+                            <strong>Applied</strong>
+                            <p>{{ application.applied_at|date:"d M Y" }}</p>
+                        </div>
+
+                    </div>
+
+
+                    <div class="timeline-item
+                        {% if application.status != 'applied' %}active{% endif %}">
+
+                        <span></span>
+
+                        <div>
+                            <strong>Under Review</strong>
+                        </div>
+
+                    </div>
+
+
+                    <div class="timeline-item
+                        {% if application.status == 'shortlisted' or application.status == 'interview' or application.status == 'selected' %}active{% endif %}">
+
+                        <span></span>
+
+                        <div>
+                            <strong>Shortlisted</strong>
+                        </div>
+
+                    </div>
+
+
+                    <div class="timeline-item
+                        {% if application.status == 'interview' or application.status == 'selected' %}active{% endif %}">
+
+                        <span></span>
+
+                        <div>
+                            <strong>Interview</strong>
+                        </div>
+
+                    </div>
+
+
+                    <div class="timeline-item
+                        {% if application.status == 'selected' %}active{% endif %}">
+
+                        <span></span>
+
+                        <div>
+                            <strong>Selected</strong>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </main>
+
+
+        <aside>
+
+            <div class="content-card">
+
+                <h3>Application Status</h3>
+
+                <span class="status status-{{ application.status }}">
+                    {{ application.get_status_display }}
+                </span>
+
+                <hr>
+
+                <p>
+                    <strong>Candidate</strong><br>
+                    {{ application.applicant.get_full_name|default:application.applicant.username }}
+                    <small style="display: block; color: #64748b;">{{ application.applicant.email }}</small>
+                </p>
+
+                <p>
+                    <strong>Applied On</strong><br>
+                    {{ application.applied_at|date:"d M Y, h:i A" }}
+                </p>
+
+                {% if application.resume %}
+
+                <p>
+                    <strong>Resume</strong><br>
+
+                    <a href="{{ application.resume.resume_file.url }}"
+                       target="_blank"
+                       class="text-link"
+                       style="display: inline-flex; align-items: center; gap: 6px; margin-top: 4px; color: #2563eb; font-weight: 600;">
+                        <i class="fa-solid fa-file-lines" aria-hidden="true"></i> View Resume
+                    </a>
+
+                </p>
+
+                {% endif %}
+
+                {% if is_job_recruiter %}
+                <hr>
+                <h4 style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 8px;">Update Candidate Status</h4>
+                <form method="POST" action="{% url 'update_application_status' application.id %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.path }}">
+                    <div style="margin-bottom: 12px;">
+                        <select name="status" class="form-control" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; background: white;">
+                            {% for value, label in status_choices %}
+                                <option value="{{ value }}" {% if application.status == value %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; font-size: 13px;">
+                        <i class="fa-solid fa-check" aria-hidden="true"></i> Update Status
+                    </button>
+                </form>
+                {% endif %}
+
+            </div>
+
+        </aside>
+
+    </div>
+
+</div>
+
+</section>
+
+{% endblock %}

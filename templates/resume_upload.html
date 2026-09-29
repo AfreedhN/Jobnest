@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+
+{% block title %}Upload Resume | JobNest{% endblock %}
+
+{% block content %}
+
+<section class="section">
+
+<div class="container small-container">
+
+    <div class="page-header">
+
+        <span class="section-label">RESUME</span>
+
+        <h1>Upload Resume</h1>
+
+        <p>
+            Upload your latest PDF or DOCX resume.
+        </p>
+
+    </div>
+
+
+    <div class="content-card">
+
+        <form method="POST"
+              enctype="multipart/form-data"
+              id="resumeUploadForm">
+
+            {% csrf_token %}
+
+
+            <div class="upload-box">
+
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+
+                <h3>
+                    Upload your resume
+                </h3>
+
+                <p>
+                    PDF or DOCX · Maximum 5 MB
+                </p>
+
+
+                <input
+                    type="file"
+                    name="resume_file"
+                    id="resumeFile"
+                    accept=".pdf,.docx"
+                    required>
+
+
+                <label for="resumeFile"
+                       class="btn-secondary">
+                    Choose File
+                </label>
+
+
+                <div class="resume-file-status-row" id="resumeFileStatusRow">
+                    <span id="fileName">No file selected</span>
+                    <button type="button"
+                            id="resumeRemoveFileBtn"
+                            class="resume-remove-file-btn"
+                            style="display: none;"
+                            title="Remove selected resume"
+                            aria-label="Remove selected resume">
+                        <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                    </button>
+                </div>
+
+            </div>
+
+
+            <label class="checkbox-label">
+
+                <input
+                    type="checkbox"
+                    name="is_primary">
+
+                Set as primary resume
+
+            </label>
+
+
+            {% if error %}
+
+                <div class="form-error">
+                    {{ error }}
+                </div>
+
+            {% endif %}
+
+
+            <button type="submit"
+                    class="btn-primary full-width">
+
+                Upload Resume
+
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+</section>
+
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+const resumeFile = document.getElementById("resumeFile");
+const fileName = document.getElementById("fileName");
+const removeBtn = document.getElementById("resumeRemoveFileBtn");
+
+function clearSelectedResume() {
+    if (resumeFile) resumeFile.value = "";
+    if (fileName) fileName.textContent = "No file selected";
+    if (removeBtn) removeBtn.style.display = "none";
+}
+
+if (resumeFile) {
+    resumeFile.addEventListener("change", function () {
+        if (this.files && this.files.length > 0) {
+            if (fileName) fileName.textContent = this.files[0].name;
+            if (removeBtn) removeBtn.style.display = "inline-flex";
+        } else {
+            clearSelectedResume();
+        }
+    });
+}
+
+if (removeBtn) {
+    removeBtn.addEventListener("click", function () {
+        clearSelectedResume();
+    });
+}
+</script>
+{% endblock %}

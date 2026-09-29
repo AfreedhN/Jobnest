@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Job | JobNest{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container small-container" style="max-width: 600px; margin: 40px auto;">
+        <div class="content-card" style="padding: 32px; border-radius: 16px; text-align: center; border: 1px solid #fee2e2;">
+            <div style="width: 56px; height: 56px; margin: 0 auto 20px; border-radius: 50%; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+            </div>
+
+            <h1 style="font-size: 24px; color: #0f172a; margin-bottom: 12px;">Delete Job Posting?</h1>
+            <p style="color: #64748b; font-size: 15px; margin-bottom: 24px;">
+                Are you sure you want to permanently delete <strong>"{{ job.title }}"</strong> at <strong>{{ job.company.name }}</strong>?
+                This action cannot be undone and will remove all associated applications.
+            </p>
+
+            <form method="post" style="display: flex; gap: 12px; justify-content: center;">
+                {% csrf_token %}
+                <a href="{% url 'manage_jobs' %}" class="btn-secondary" style="padding: 10px 24px;">
+                    Cancel
+                </a>
+                <button type="submit" class="btn-primary" style="background: #dc2626; border-color: #dc2626; padding: 10px 24px;">
+                    <i class="fa-solid fa-trash" aria-hidden="true"></i> Yes, Delete Job
+                </button>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}

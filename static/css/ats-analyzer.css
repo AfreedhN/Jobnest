@@ -1,0 +1,136 @@
+.ats-analyzer-form .form-error {
+    margin-bottom: 18px;
+    padding: 11px 13px;
+    border: 1px solid #efcccc;
+    border-radius: 6px;
+    background: #fff3f3;
+    color: #a43f3f;
+    font-size: 13px;
+}
+
+.ats-analyzer-form .form-group select,
+.ats-analyzer-form input[type="file"] {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 1px solid #d6e0e7;
+    border-radius: 6px;
+    background: #fff;
+    color: #293f50;
+    font: inherit;
+    font-size: 13px;
+}
+
+.ats-analyzer-form .form-group select:focus-visible,
+.ats-analyzer-form input[type="file"]:focus-visible {
+    outline: 3px solid rgba(40, 117, 100, .16);
+    outline-offset: 2px;
+    border-color: #75a99b;
+}
+
+.ats-analyzer-form input[type="file"] {
+    border-style: dashed;
+    background: #fbfcfd;
+}
+
+.ats-analyzer-form input[type="file"]::file-selector-button {
+    margin-right: 12px;
+    padding: 8px 12px;
+    border: 1px solid #c8d7de;
+    border-radius: 5px;
+    background: #f3f7f8;
+    color: #294c58;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.ats-analyzer-form input[type="file"]::file-selector-button:hover {
+    border-color: #75a99b;
+    background: #edf6f2;
+}
+
+.ats-analyzer-form #atsResumeHelp {
+    display: block;
+    margin-top: 7px;
+    color: #687887;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.ats-resume-filename {
+    overflow-wrap: anywhere;
+    color: #176b5b;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.ats-file-status-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+    max-width: 100%;
+}
+
+.ats-file-status-row .ats-resume-filename {
+    margin-top: 0;
+}
+
+.ats-remove-file-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: 1px solid #efcccc;
+    border-radius: 4px;
+    background: #fff3f3;
+    color: #a43f3f;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.ats-remove-file-btn:hover {
+    background: #ffe3e3;
+    border-color: #e5b0b0;
+    color: #8c2b2b;
+}
+
+.ats-remove-file-btn:focus-visible {
+    outline: 2px solid #a43f3f;
+    outline-offset: 1px;
+}
+
+.ats-form-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 17px 0;
+    color: #84919b;
+    font-size: 11px;
+    text-transform: uppercase;
+}
+
+.ats-form-divider::before,
+.ats-form-divider::after {
+    height: 1px;
+    flex: 1;
+    background: #e5ebef;
+    content: "";
+}
+
+.ats-analyzer-form .ats-info {
+    margin: 8px 0 20px;
+}
+
+@media (max-width: 480px) {
+    .ats-analyzer-form .form-group select,
+    .ats-analyzer-form input[type="file"] {
+        font-size: 12px;
+    }
+}

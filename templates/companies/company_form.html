@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Add a Company | JobNest{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/company-form.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="company-create">
+    <div class="company-create__masthead">
+        <div class="container">
+            <a class="company-create__back" href="{% url 'companies:company_list' %}">
+                <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                Company directory
+            </a>
+            <p class="company-create__eyebrow">Grow the directory</p>
+            <h1>Add a company</h1>
+            <p>Share the details candidates need to discover your team.</p>
+        </div>
+    </div>
+
+    <div class="container company-create__content">
+        <form class="company-create__form" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+                <div class="company-create__error-summary" role="alert">
+                    {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="company-create__grid">
+                {% for field in form %}
+                    <div class="company-create__field{% if field.name == 'description' or field.name == 'about_company' %} company-create__field--wide{% endif %}">
+                        <label for="{{ field.id_for_label }}">
+                            {{ field.label }}{% if field.field.required %}<span aria-hidden="true"> *</span>{% endif %}
+                        </label>
+                        {{ field }}
+                        {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
+                        {% for error in field.errors %}<span class="company-create__field-error" role="alert">{{ error }}</span>{% endfor %}
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="company-create__footer">
+                <p><span aria-hidden="true">*</span> Required fields</p>
+                <div>
+                    <a class="btn-secondary" href="{% url 'companies:company_list' %}">Cancel</a>
+                    <button class="btn-primary" type="submit">
+                        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                        Add company
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

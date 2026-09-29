@@ -1,0 +1,318 @@
+{% extends 'base.html' %}
+
+{% block title %}JobNest | Find Your Dream Job{% endblock %}
+
+{% block content %}
+
+<section class="hero">
+
+    <div class="container hero-content">
+
+        <div class="hero-text">
+
+            <span class="hero-badge">
+                <i class="fa-solid fa-sparkles"></i>
+                Smart Job Search Platform
+            </span>
+
+            <h1>
+                Find a job where
+                <span>you belong.</span>
+            </h1>
+
+            <p>
+                Search thousands of opportunities, discover top companies,
+                upload your resume and improve your ATS compatibility.
+            </p>
+
+            <form action="{% url 'home' %}#jobs-section" method="GET" class="hero-search" id="heroSearchForm">
+
+                <div class="search-input">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+
+                    <input
+                        type="text"
+                        name="q"
+                        value="{{ search_query }}"
+                        placeholder="Job title, skills or keywords"
+                        aria-label="Job title, skills or keywords">
+                </div>
+
+                <div class="search-input">
+                    <i class="fa-solid fa-location-dot"></i>
+
+                    <input
+                        type="text"
+                        name="location"
+                        value="{{ location_query }}"
+                        placeholder="Location"
+                        aria-label="Location">
+                </div>
+
+                <button type="submit">
+                    Search Jobs
+                </button>
+
+            </form>
+
+            <div class="popular-searches">
+
+                <span>Popular:</span>
+
+                <a href="{% url 'home' %}?q=Python+Developer#jobs-section">
+                    Python Developer
+                </a>
+
+                <a href="{% url 'home' %}?q=Frontend+Developer#jobs-section">
+                    Frontend Developer
+                </a>
+
+                <a href="{% url 'home' %}?q=Data+Analyst#jobs-section">
+                    Data Analyst
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<section class="stats-section">
+
+    <div class="container stats-grid">
+
+        <div class="stat-card">
+            <i class="fa-solid fa-briefcase"></i>
+            <strong>{{ total_jobs|default:"0" }}+</strong>
+            <span>Active Jobs</span>
+        </div>
+
+        <div class="stat-card">
+            <i class="fa-solid fa-building"></i>
+            <strong>{{ total_companies|default:"0" }}+</strong>
+            <span>Companies</span>
+        </div>
+
+        <div class="stat-card">
+            <i class="fa-solid fa-users"></i>
+            <strong>{{ total_users|default:"0" }}+</strong>
+            <span>Job Seekers</span>
+        </div>
+
+        <div class="stat-card">
+            <i class="fa-solid fa-file-circle-check"></i>
+            <strong>ATS</strong>
+            <span>Resume Analyzer</span>
+        </div>
+
+    </div>
+
+</section>
+
+
+<section class="section" id="jobs-section">
+
+    <div class="container">
+
+        <div class="section-header">
+
+            <div>
+                <span class="section-label">{% if is_searching %}SEARCH RESULTS{% else %}EXPLORE{% endif %}</span>
+                <h2>{% if is_searching %}Job Opportunities Matching "{{ search_query }}"{% else %}Latest Job Opportunities{% endif %}</h2>
+            </div>
+
+            <div style="display: flex; gap: 14px; align-items: center; flex-wrap: wrap;">
+                {% if is_searching %}
+                    <a href="{% url 'home' %}#jobs-section" class="text-link" style="color: #64748b;">
+                        <i class="fa-solid fa-xmark"></i>
+                        Clear search
+                    </a>
+                {% endif %}
+                <a href="{% url 'jobs:job_list' %}{% if search_query %}?search={{ search_query }}{% if location_query %}&location={{ location_query }}{% endif %}{% endif %}" class="text-link">
+                    View all jobs
+                    <i class="fa-solid fa-arrow-right"></i>
+                </a>
+            </div>
+
+        </div>
+
+
+        <div class="job-grid">
+
+            {% for job in latest_jobs %}
+
+            <article class="job-card job-card--clickable">
+
+                <div class="job-card-top">
+
+                    <div class="company-logo">
+
+                        {% if job.company.logo %}
+                            <img src="{{ job.company.logo.url }}"
+                                 alt="{{ job.company.name }}">
+                        {% else %}
+                            <i class="fa-solid fa-building"></i>
+                        {% endif %}
+
+                    </div>
+
+                    <span class="job-type">
+                        {{ job.get_job_type_display }}
+                    </span>
+
+                </div>
+
+
+                <h3>
+                    <a href="{% url 'jobs:job_detail' job.pk %}"
+                       aria-label="View details for {{ job.title }} at {{ job.company.name }}">
+                        {{ job.title }}
+                    </a>
+                </h3>
+
+                <p class="company-name">
+                    {{ job.company.name }}
+                </p>
+
+                <div class="job-meta">
+
+                    <span>
+                        <i class="fa-solid fa-location-dot"></i>
+                        {{ job.location }}
+                    </span>
+
+                    <span>
+                        <i class="fa-solid fa-house"></i>
+                        {{ job.get_work_mode_display }}
+                    </span>
+
+                </div>
+
+
+                {% if job.salary_min or job.salary_max %}
+                <div class="salary">
+
+                    <i class="fa-solid fa-indian-rupee-sign"></i>
+
+                    {% if job.salary_min %}
+                        {{ job.salary_min }}
+                    {% endif %}
+
+                    -
+
+                    {% if job.salary_max %}
+                        {{ job.salary_max }}
+                    {% endif %}
+
+                </div>
+                {% endif %}
+
+            </article>
+
+            {% empty %}
+
+            <div class="empty-state">
+                <i class="fa-solid fa-briefcase"></i>
+                {% if is_searching %}
+                    <h3>No results found</h3>
+                    <p>No jobs found matching your search criteria. Try searching with different job titles or skill keywords.</p>
+                    <a href="{% url 'home' %}#jobs-section" class="text-link" style="margin-top: 10px; display: inline-block;">Clear search</a>
+                {% else %}
+                    <h3>No jobs available</h3>
+                    <p>New opportunities will appear here.</p>
+                {% endif %}
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<section class="section light-section">
+
+    <div class="container">
+
+        <div class="section-header">
+            <div>
+                <span class="section-label">COMPANIES</span>
+                <h2>Top Companies</h2>
+            </div>
+
+            <a href="{% url 'companies:company_list' %}" class="text-link">
+                Explore companies
+                <i class="fa-solid fa-arrow-right"></i>
+            </a>
+        </div>
+
+
+        <div class="company-grid">
+
+            {% for company in companies %}
+
+            <a href="{% url 'company_details' company.id %}"
+               class="company-card">
+
+                <div class="company-logo large">
+
+                    {% if company.logo %}
+                        <img src="{{ company.logo.url }}"
+                             alt="{{ company.name }}">
+                    {% else %}
+                        <i class="fa-solid fa-building"></i>
+                    {% endif %}
+
+                </div>
+
+                <h3>{{ company.name }}</h3>
+
+                <p>{{ company.industry }}</p>
+
+                <span>
+                    {{ company.location }}
+                </span>
+
+            </a>
+
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<section class="cta-section">
+
+    <div class="container cta-content">
+
+        <div>
+            <span class="section-label">FOR JOB SEEKERS</span>
+
+            <h2>
+                Make your resume stronger.
+            </h2>
+
+            <p>
+                Upload your resume and check how well it matches
+                with your target job.
+            </p>
+        </div>
+
+        <a href="{% url 'ats_analyzer' %}" class="btn-primary">
+            Analyze My Resume
+            <i class="fa-solid fa-arrow-right"></i>
+        </a>
+
+    </div>
+
+</section>
+
+{% endblock %}

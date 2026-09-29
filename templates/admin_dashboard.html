@@ -1,0 +1,444 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard | JobNest{% endblock %}
+
+{% block content %}
+
+<section class="section">
+
+    <div class="container">
+
+        <div class="page-header">
+            <span class="section-label">JOBNEST ADMIN</span>
+
+            <h1>Admin Dashboard</h1>
+
+            <p>
+                Manage users, companies, jobs, applications and resumes.
+            </p>
+        </div>
+
+
+        <!-- Statistics -->
+
+        <div class="dashboard-stats">
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+
+                <div>
+                    <span>Total Users</span>
+                    <strong>{{ users_count }}</strong>
+                </div>
+            </div>
+
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fa-solid fa-user-tie"></i>
+                </div>
+
+                <div>
+                    <span>Job Seekers</span>
+                    <strong>{{ job_seekers_count }}</strong>
+                </div>
+            </div>
+
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fa-solid fa-building"></i>
+                </div>
+
+                <div>
+                    <span>Companies</span>
+                    <strong>{{ companies_count }}</strong>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon" style="color: #16a34a;">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+
+                <div>
+                    <span>Verified</span>
+                    <strong>{{ verified_companies_count }}</strong>
+                </div>
+            </div>
+
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fa-solid fa-briefcase"></i>
+                </div>
+
+                <div>
+                    <span>Active Jobs</span>
+                    <strong>{{ jobs_count }}</strong>
+                </div>
+            </div>
+
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fa-solid fa-file-circle-check"></i>
+                </div>
+
+                <div>
+                    <span>Applications</span>
+                    <strong>{{ applications_count }}</strong>
+                </div>
+            </div>
+
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fa-solid fa-file-lines"></i>
+                </div>
+
+                <div>
+                    <span>Resumes</span>
+                    <strong>{{ resumes_count }}</strong>
+                </div>
+            </div>
+
+        </div>
+
+
+        <!-- Admin Actions -->
+
+        <div class="content-card">
+
+            <h2>Admin Management</h2>
+
+            <div class="admin-actions">
+
+                <a href="/admin/auth/user/" class="btn-primary">
+                    <i class="fa-solid fa-users"></i>
+                    Manage Users
+                </a>
+
+                <a href="/admin/companies/company/" class="btn-secondary">
+                    <i class="fa-solid fa-building"></i>
+                    Manage Companies
+                </a>
+
+                <a href="/admin/jobs/job/" class="btn-secondary">
+                    <i class="fa-solid fa-briefcase"></i>
+                    Manage Jobs
+                </a>
+
+                <a href="/admin/applications/application/" class="btn-secondary">
+                    <i class="fa-solid fa-file-circle-check"></i>
+                    Manage Applications
+                </a>
+
+            </div>
+
+        </div>
+
+
+        <!-- Company Verification Management -->
+
+        <div class="content-card">
+
+            <div class="card-header">
+                <div>
+                    <span class="section-label">VERIFICATION MANAGEMENT</span>
+                    <h2>Company Verification & Approval</h2>
+                    <p style="color: var(--color-muted, #64748b); font-size: 14px; margin-top: 4px;">
+                        Only verified companies are permitted to post jobs. Approve, suspend, or reject company statuses below.
+                    </p>
+                </div>
+
+                <a href="/admin/companies/company/" class="btn-secondary">
+                    <i class="fa-solid fa-sliders"></i> Django Admin Companies
+                </a>
+            </div>
+
+            {% if all_companies %}
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Company</th>
+                                <th>Industry</th>
+                                <th>Location</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for company in all_companies %}
+                            <tr>
+                                <td>
+                                    <strong>{{ company.name }}</strong>
+                                    {% if company.website %}
+                                        <br><small><a href="{{ company.website }}" target="_blank" rel="noopener">{{ company.website }}</a></small>
+                                    {% endif %}
+                                </td>
+                                <td>{{ company.industry }}</td>
+                                <td>{{ company.location }}</td>
+                                <td>
+                                    {% if company.verification_status == 'verified' %}
+                                        <span class="status-badge" style="background-color: #dcfce7; color: #166534; font-weight: 600;">
+                                            <i class="fa-solid fa-circle-check"></i> Verified
+                                        </span>
+                                    {% elif company.verification_status == 'suspended' %}
+                                        <span class="status-badge" style="background-color: #fee2e2; color: #991b1b; font-weight: 600;">
+                                            <i class="fa-solid fa-ban"></i> Suspended
+                                        </span>
+                                    {% elif company.verification_status == 'rejected' %}
+                                        <span class="status-badge" style="background-color: #f3f4f6; color: #374151; font-weight: 600;">
+                                            <i class="fa-solid fa-triangle-exclamation"></i> Rejected
+                                        </span>
+                                    {% else %}
+                                        <span class="status-badge" style="background-color: #fef9c3; color: #854d0e; font-weight: 600;">
+                                            <i class="fa-solid fa-clock"></i> Unverified
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                                        {% if company.verification_status != 'verified' %}
+                                            <form method="post" action="{% url 'update_company_status' company.pk %}" style="display: inline;">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="status" value="verified">
+                                                <button type="submit" class="btn-primary" style="padding: 4px 10px; font-size: 12px; background-color: #16a34a; border-color: #16a34a; cursor: pointer;" title="Approve & Verify (Enables immediate job posting)">
+                                                    <i class="fa-solid fa-check"></i> Verify
+                                                </button>
+                                            </form>
+                                        {% endif %}
+
+                                        {% if company.verification_status != 'suspended' %}
+                                            <form method="post" action="{% url 'update_company_status' company.pk %}" style="display: inline;">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="status" value="suspended">
+                                                <button type="submit" class="btn-secondary" style="padding: 4px 10px; font-size: 12px; color: #dc2626; cursor: pointer;" title="Suspend company (Disables job posting)">
+                                                    <i class="fa-solid fa-ban"></i> Suspend
+                                                </button>
+                                            </form>
+                                        {% endif %}
+
+                                        {% if company.verification_status != 'rejected' and company.verification_status != 'unverified' %}
+                                            <form method="post" action="{% url 'update_company_status' company.pk %}" style="display: inline;">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="status" value="unverified">
+                                                <button type="submit" class="btn-secondary" style="padding: 4px 10px; font-size: 12px; cursor: pointer;" title="Reset to unverified">
+                                                    Reset
+                                                </button>
+                                            </form>
+                                        {% endif %}
+
+                                        <a href="/admin/companies/company/{{ company.pk }}/change/" style="font-size: 12px; margin-left: 4px;" title="Edit details in Django Admin">
+                                            <i class="fa-solid fa-pen-to-square"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p>No companies registered yet.</p>
+            {% endif %}
+
+        </div>
+
+
+        <!-- Recent Jobs -->
+
+        <div class="content-card">
+
+            <div class="card-header">
+
+                <div>
+                    <span class="section-label">
+                        RECENT JOBS
+                    </span>
+
+                    <h2>Latest Job Postings</h2>
+                </div>
+
+                <a href="{% url 'jobs:job_list' %}" class="btn-secondary">
+                    View All
+                </a>
+
+            </div>
+
+
+            {% if recent_jobs %}
+
+                <div class="table-wrapper">
+
+                    <table class="data-table">
+
+                        <thead>
+
+                            <tr>
+                                <th>Job</th>
+                                <th>Company</th>
+                                <th>Location</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            {% for job in recent_jobs %}
+
+                            <tr>
+
+                                <td>
+                                    <strong>
+                                        {{ job.title }}
+                                    </strong>
+                                </td>
+
+                                <td>
+                                    {{ job.company.name }}
+                                </td>
+
+                                <td>
+                                    {{ job.location }}
+                                </td>
+
+                                <td>
+                                    {{ job.get_job_type_display }}
+                                </td>
+
+                                <td>
+
+                                    {% if job.is_active %}
+
+                                        <span class="status-badge status-selected">
+                                            Active
+                                        </span>
+
+                                    {% else %}
+
+                                        <span class="status-badge status-rejected">
+                                            Inactive
+                                        </span>
+
+                                    {% endif %}
+
+                                </td>
+
+                            </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            {% else %}
+
+                <p>No jobs available.</p>
+
+            {% endif %}
+
+        </div>
+
+
+        <!-- Recent Applications -->
+
+        <div class="content-card">
+
+            <div class="card-header">
+
+                <div>
+                    <span class="section-label">
+                        RECENT APPLICATIONS
+                    </span>
+
+                    <h2>Latest Applications</h2>
+                </div>
+
+            </div>
+
+
+            {% if recent_applications %}
+
+                <div class="table-wrapper">
+
+                    <table class="data-table">
+
+                        <thead>
+
+                            <tr>
+                                <th>Applicant</th>
+                                <th>Job</th>
+                                <th>Company</th>
+                                <th>Status</th>
+                                <th>Applied</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            {% for application in recent_applications %}
+
+                            <tr>
+
+                                <td>
+                                    <strong>
+                                        {{ application.applicant.username }}
+                                    </strong>
+                                </td>
+
+                                <td>
+                                    {{ application.job.title }}
+                                </td>
+
+                                <td>
+                                    {{ application.job.company.name }}
+                                </td>
+
+                                <td>
+
+                                    <span class="status-badge">
+
+                                        {{ application.get_status_display }}
+
+                                    </span>
+
+                                </td>
+
+                                <td>
+                                    {{ application.applied_at|date:"d M Y" }}
+                                </td>
+
+                            </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            {% else %}
+
+                <p>No applications available.</p>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}

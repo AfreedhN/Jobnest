@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Jobs | JobNest{% endblock %}
+
+{% block content %}
+
+<section class="section">
+
+<div class="container">
+
+    <div class="dashboard-header">
+
+        <div>
+
+            <span class="section-label">
+                RECRUITER
+            </span>
+
+            <h1>Manage Jobs</h1>
+
+        </div>
+
+        <a href="{% url 'post_job' %}"
+           class="btn-primary">
+
+            <i class="fa-solid fa-plus"></i>
+            Post Job
+
+        </a>
+
+    </div>
+
+
+    <div class="content-card table-card">
+
+        <div class="table-responsive">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>Job</th>
+                        <th>Location</th>
+                        <th>Applications</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                {% for job in jobs %}
+
+                <tr>
+
+                    <td>
+
+                        <strong>
+                            {{ job.title }}
+                        </strong>
+
+                    </td>
+
+
+                    <td>
+                        {{ job.location }}
+                    </td>
+
+
+                    <td>
+                        {{ job.applications.count }}
+                    </td>
+
+
+                    <td>
+
+                        {% if job.is_active %}
+
+                            <span class="status status-selected">
+                                Active
+                            </span>
+
+                        {% else %}
+
+                            <span class="status status-rejected">
+                                Inactive
+                            </span>
+
+                        {% endif %}
+
+                    </td>
+
+
+                    <td>
+                        {{ job.created_at|date:"d M Y" }}
+                    </td>
+
+
+                    <td>
+
+                        <div class="table-actions">
+
+                            <a href="{% url 'job_details' job.id %}">
+                                <i class="fa-solid fa-eye"></i>
+                            </a>
+
+                            <a href="{% url 'jobs:edit_job' job.id %}">
+                                <i class="fa-solid fa-pen"></i>
+                            </a>
+
+                            <a href="{% url 'jobs:delete_job' job.id %}"
+                               onclick="return confirm('Delete this job?')">
+                                <i class="fa-solid fa-trash"></i>
+                            </a>
+
+                        </div>
+
+                    </td>
+
+                </tr>
+
+                {% empty %}
+
+                <tr>
+
+                    <td colspan="6">
+                        No jobs posted yet.
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+</section>
+
+{% endblock %}

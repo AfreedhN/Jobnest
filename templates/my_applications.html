@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Applications | JobNest{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/account-pages.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<section class="section account-page">
+    <div class="container">
+        <header class="account-page__header">
+            <div>
+                <p class="account-page__eyebrow">Application tracker</p>
+                <h1>My Applications</h1>
+                <p>Review your submitted applications and their latest status.</p>
+            </div>
+            <a href="{% url 'jobs:job_list' %}" class="btn-secondary">
+                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                Browse jobs
+            </a>
+        </header>
+
+        <p class="account-page__summary">
+            {{ applications|length }} application{{ applications|length|pluralize }}
+        </p>
+
+        {% if applications %}
+            <div class="application-list">
+                {% for application in applications %}
+                    <article class="application-card">
+                        <div class="application-card__brand">
+                            {% if application.job.company.logo %}
+                                <img src="{{ application.job.company.logo.url }}"
+                                     alt="{{ application.job.company.name }} logo">
+                            {% else %}
+                                <span aria-hidden="true">{{ application.job.company.name|slice:":1"|upper }}</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="application-card__main">
+                            <p class="application-card__company">{{ application.job.company.name }}</p>
+                            <h2>
+                                <a href="{% url 'job_details' application.job.id %}">
+                                    {{ application.job.title }}
+                                </a>
+                            </h2>
+                            <div class="application-card__meta">
+                                <span>
+                                    <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+                                    {{ application.job.location }}
+                                </span>
+                                <span>
+                                    <i class="fa-regular fa-calendar" aria-hidden="true"></i>
+                                    Applied {{ application.applied_at|date:"d M Y" }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="application-card__actions">
+                            <span class="status status-{{ application.status }}">
+                                {{ application.get_status_display }}
+                            </span>
+                            <a href="{% url 'application_details' application.id %}"
+                               class="application-card__view">
+                                View application
+                                <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                            </a>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <section class="account-empty">
+                <span class="account-empty__icon" aria-hidden="true">
+                    <i class="fa-regular fa-folder-open"></i>
+                </span>
+                <h2>No applications yet</h2>
+                <p>Your submitted job applications will appear here.</p>
+                <a href="{% url 'jobs:job_list' %}" class="btn-primary">
+                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                    Find jobs
+                </a>
+            </section>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

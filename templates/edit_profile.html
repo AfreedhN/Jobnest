@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Profile | JobNest{% endblock %}
+
+{% block content %}
+
+<section class="section">
+
+<div class="container small-container">
+
+    <div class="page-header">
+        <span class="section-label">PROFILE</span>
+        <h1>Edit Profile</h1>
+        <p>Keep your professional information up to date.</p>
+    </div>
+
+
+    <div class="content-card">
+
+        <form method="POST" enctype="multipart/form-data">
+
+            {% csrf_token %}
+
+
+            <div class="form-row">
+
+                <div class="form-group">
+                    <label>First Name</label>
+                    <input type="text"
+                           name="first_name"
+                           value="{{ user.first_name }}">
+                </div>
+
+                <div class="form-group">
+                    <label>Last Name</label>
+                    <input type="text"
+                           name="last_name"
+                           value="{{ user.last_name }}">
+                </div>
+
+            </div>
+
+
+            <div class="form-group">
+                <label>Email</label>
+
+                <input type="email"
+                       name="email"
+                       value="{{ user.email }}"
+                       required>
+            </div>
+
+
+            <div class="form-group">
+                <label for="profilePhotoInput">Profile Photo</label>
+
+                <input type="file"
+                       id="profilePhotoInput"
+                       name="profile_photo"
+                       accept="image/jpeg,image/png,image/webp,image/gif,.jpg,.jpeg,.png,.webp,.gif">
+                <small style="display:block; margin-top:5px; color:#687887; font-size:12px;">Only profile photos (JPG, PNG, WEBP, GIF) are allowed. Documents and other files cannot be uploaded.</small>
+            </div>
+
+
+            <div class="form-group">
+                <label>Phone</label>
+
+                <input type="text"
+                       name="phone"
+                       value="{{ profile.phone }}"
+                       placeholder="+91 XXXXX XXXXX">
+            </div>
+
+
+            <div class="form-group">
+                <label>Location</label>
+
+                <input type="text"
+                       name="location"
+                       value="{{ profile.location }}"
+                       placeholder="Chennai, Tamil Nadu">
+            </div>
+
+
+            <div class="form-group">
+                <label>Professional Headline</label>
+
+                <input type="text"
+                       name="professional_headline"
+                       value="{{ profile.professional_headline }}"
+                       placeholder="Full Stack Python Developer">
+            </div>
+
+
+            <div class="form-group">
+                <label>About</label>
+
+                <textarea name="about"
+                          rows="6"
+                          placeholder="Tell employers about yourself...">{{ profile.about }}</textarea>
+            </div>
+
+
+            <div class="form-group">
+                <label>Skills</label>
+
+                <textarea name="skills"
+                          rows="4"
+                          placeholder="Python, Django, HTML, CSS, JavaScript, PostgreSQL">{{ profile.skills }}</textarea>
+            </div>
+
+
+            <div class="form-group">
+                <label>Education</label>
+
+                <textarea name="education"
+                          rows="4">{{ profile.education }}</textarea>
+            </div>
+
+
+            <div class="form-group">
+                <label>Experience</label>
+
+                <textarea name="experience"
+                          rows="5">{{ profile.experience }}</textarea>
+            </div>
+
+
+            <div class="form-row">
+
+                <div class="form-group">
+                    <label>LinkedIn</label>
+                    <input type="url"
+                           name="linkedin"
+                           value="{{ profile.linkedin }}">
+                </div>
+
+                <div class="form-group">
+                    <label>GitHub</label>
+                    <input type="url"
+                           name="github"
+                           value="{{ profile.github }}">
+                </div>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>Portfolio</label>
+
+                <input type="url"
+                       name="portfolio"
+                       value="{{ profile.portfolio }}">
+
+            </div>
+
+
+            <div class="form-actions">
+
+                <a href="{% url 'profile' %}"
+                   class="btn-secondary">
+                    Cancel
+                </a>
+
+                <button type="submit"
+                        class="btn-primary">
+                    Save Changes
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+</section>
+
+{% endblock %}

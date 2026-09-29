@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ company.name }} | JobNest{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/company-detail.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="company-profile">
+    <div class="company-profile__masthead">
+        <div class="container">
+            <a class="company-profile__back" href="{% url 'companies:company_list' %}">
+                <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                All companies
+            </a>
+            <div class="company-profile__identity">
+                {% if company.logo %}
+                    <img class="company-profile__logo" src="{{ company.logo.url }}" alt="{{ company.name }} logo">
+                {% else %}
+                    <span class="company-profile__monogram" aria-hidden="true">{{ company.name|slice:":1"|upper }}</span>
+                {% endif %}
+                <div>
+                    <p class="company-profile__eyebrow">{{ company.industry }}</p>
+                    <h1>
+                        {{ company.name }}
+                        {% if company.is_verified %}
+                            <span class="status-badge" style="background-color: #dcfce7; color: #166534; font-size: 13px; font-weight: 600; padding: 3px 8px; border-radius: 4px; vertical-align: middle; margin-left: 8px;">
+                                <i class="fa-solid fa-circle-check"></i> Verified
+                            </span>
+                        {% elif company.is_suspended %}
+                            <span class="status-badge" style="background-color: #fee2e2; color: #991b1b; font-size: 13px; font-weight: 600; padding: 3px 8px; border-radius: 4px; vertical-align: middle; margin-left: 8px;">
+                                <i class="fa-solid fa-ban"></i> Suspended
+                            </span>
+                        {% elif company.is_rejected %}
+                            <span class="status-badge" style="background-color: #f3f4f6; color: #374151; font-size: 13px; font-weight: 600; padding: 3px 8px; border-radius: 4px; vertical-align: middle; margin-left: 8px;">
+                                <i class="fa-solid fa-triangle-exclamation"></i> Rejected
+                            </span>
+                        {% else %}
+                            <span class="status-badge" style="background-color: #fef9c3; color: #854d0e; font-size: 13px; font-weight: 600; padding: 3px 8px; border-radius: 4px; vertical-align: middle; margin-left: 8px;">
+                                <i class="fa-solid fa-clock"></i> Pending Verification
+                            </span>
+                        {% endif %}
+                    </h1>
+                    <p class="company-profile__location"><i class="fa-solid fa-location-dot" aria-hidden="true"></i>{{ company.location }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container company-profile__body">
+        <main class="company-profile__main">
+            <section class="company-profile__section">
+                <p class="company-profile__eyebrow">About the company</p>
+                <h2>Get to know {{ company.name }}</h2>
+                {% if company.about_company %}
+                    <p>{{ company.about_company|linebreaksbr }}</p>
+                {% elif company.description %}
+                    <p>{{ company.description|linebreaksbr }}</p>
+                {% else %}
+                    <p>{{ company.name }} is part of the {{ company.industry }} community in {{ company.location }}.</p>
+                {% endif %}
+            </section>
+
+            <section class="company-profile__section company-profile__openings">
+                <div class="company-profile__section-heading">
+                    <div>
+                        <p class="company-profile__eyebrow">Opportunities</p>
+                        <h2>Open positions</h2>
+                    </div>
+                    {% if company.is_verified %}
+                        <span>{{ jobs|length }} active</span>
+                    {% else %}
+                        <span style="color: #dc2626; font-size: 12px; font-weight: 600;">Verification Required</span>
+                    {% endif %}
+                </div>
+                {% if not company.is_verified %}
+                    <p class="company-profile__no-jobs" style="color: #64748b;">
+                        This company is currently {{ company.get_verification_status_display|lower }}. Only verified companies can post active job openings.
+                    </p>
+                {% else %}
+                    {% for job in jobs %}
+                        <a class="company-profile__job" href="{% url 'jobs:job_detail' job.pk %}">
+                            <span>
+                                <strong>{{ job.title }}</strong>
+                                <small>{{ job.location }} · {{ job.get_work_mode_display }} · {{ job.get_job_type_display }}</small>
+                            </span>
+                            <span class="company-profile__job-salary">{{ job.salary_range }}</span>
+                            <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                        </a>
+                    {% empty %}
+                        <p class="company-profile__no-jobs">There are no active openings at this company right now.</p>
+                    {% endfor %}
+                {% endif %}
+            </section>
+        </main>
+
+        <aside class="company-profile__facts">
+            <h2>Company details</h2>
+            <div class="company-profile__fact">
+                <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+                <span><small>Verification Status</small><strong>{{ company.get_verification_status_display }}</strong></span>
+            </div>
+            {% if company.company_size %}
+                <div class="company-profile__fact">
+                    <i class="fa-solid fa-people-group" aria-hidden="true"></i>
+                    <span><small>Company size</small><strong>{{ company.get_company_size_display }}</strong></span>
+                </div>
+            {% endif %}
+            {% if company.founded_year %}
+                <div class="company-profile__fact">
+                    <i class="fa-regular fa-calendar" aria-hidden="true"></i>
+                    <span><small>Founded</small><strong>{{ company.founded_year }}</strong></span>
+                </div>
+            {% endif %}
+            <div class="company-profile__fact">
+                <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+                <span><small>Location</small><strong>{{ company.location }}</strong></span>
+            </div>
+            {% if company.website %}
+                <a class="company-profile__fact" href="{{ company.website }}" target="_blank" rel="noopener noreferrer">
+                    <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                    <span><small>Website</small><strong>{{ company.website }}</strong></span>
+                </a>
+            {% endif %}
+            {% if company.email %}
+                <a class="company-profile__fact" href="mailto:{{ company.email }}">
+                    <i class="fa-regular fa-envelope" aria-hidden="true"></i>
+                    <span><small>Email</small><strong>{{ company.email }}</strong></span>
+                </a>
+            {% endif %}
+            {% if company.phone %}
+                <a class="company-profile__fact" href="tel:{{ company.phone }}">
+                    <i class="fa-solid fa-phone" aria-hidden="true"></i>
+                    <span><small>Phone</small><strong>{{ company.phone }}</strong></span>
+                </a>
+            {% endif %}
+        </aside>
+    </div>
+</section>
+{% endblock %}

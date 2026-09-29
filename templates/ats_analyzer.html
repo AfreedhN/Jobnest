@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}ATS Analyzer | JobNest{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/ats-analyzer.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+
+<section class="section">
+
+<div class="container small-container">
+
+    <div class="page-header">
+
+        <span class="section-label">JOBNEST ATS</span>
+
+        <h1>Resume ATS Analyzer</h1>
+
+        <p>
+            Check how closely your resume matches a specific job.
+        </p>
+
+    </div>
+
+
+    <div class="content-card">
+
+        <form method="POST" enctype="multipart/form-data" class="ats-analyzer-form">
+
+            {% csrf_token %}
+
+            {% if error %}
+                <div class="form-error" role="alert">{{ error }}</div>
+            {% endif %}
+
+
+            <div class="form-group">
+
+                <label for="atsResume">Choose Resume</label>
+
+                <input type="file"
+                       name="resume_file"
+                       id="atsResumeFile"
+                       accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                       aria-describedby="atsResumeHelp atsResumeFilename">
+
+                <small id="atsResumeHelp">Select a searchable PDF or DOCX file (maximum 5 MB), or choose a saved resume below.</small>
+
+                <div class="ats-file-status-row">
+                    <span id="atsResumeFilename" class="ats-resume-filename" aria-live="polite">No file selected</span>
+                    <button type="button"
+                            id="atsRemoveFileBtn"
+                            class="ats-remove-file-btn"
+                            style="display: none;"
+                            title="Remove selected file"
+                            aria-label="Remove selected file">
+                        <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                    </button>
+                </div>
+
+            </div>
+
+            <div class="ats-form-divider"><span>Or choose a saved resume</span></div>
+
+            <div class="form-group">
+
+                <label for="atsSavedResume">Saved Resume</label>
+
+                <select name="resume" id="atsSavedResume">
+
+                    <option value="" {% if not selected_resume_id %}selected{% endif %}>
+                        Choose a saved resume
+                    </option>
+
+                    {% for resume in resumes %}
+
+                    <option value="{{ resume.id }}" {% if selected_resume_id == resume.id|stringformat:"s" %}selected{% endif %}>
+
+                        {{ resume.resume_file.name|cut:"resumes/" }}
+
+                        {% if resume.is_primary %}
+                            - Primary
+                        {% endif %}
+
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="atsJob">Select Job</label>
+
+                <select name="job" id="atsJob" required>
+
+                    <option value="" {% if not selected_job_id %}selected{% endif %}>
+                        Choose a job
+                    </option>
+
+                    {% for job in jobs %}
+
+                    <option value="{{ job.id }}" {% if selected_job_id == job.id|stringformat:"s" %}selected{% endif %}>
+                        {{ job.title }} - {{ job.company.name }}
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+
+            <div class="ats-info">
+
+                <i class="fa-solid fa-circle-info"></i>
+
+                <div>
+
+                    <strong>
+                        What does the score mean?
+                    </strong>
+
+                    <p>
+                        JobNest calculates an estimated compatibility
+                        score from resume skills, experience, keywords,
+                        education and resume structure.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <button type="submit"
+                    class="btn-primary full-width">
+
+                <i class="fa-solid fa-chart-simple"></i>
+
+                Analyze Resume
+
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const fileInput = document.getElementById("atsResumeFile");
+    const filename = document.getElementById("atsResumeFilename");
+    const removeBtn = document.getElementById("atsRemoveFileBtn");
+    const savedResume = document.getElementById("atsSavedResume");
+
+    function clearSelectedFile() {
+        fileInput.value = "";
+        filename.textContent = "No file selected";
+        if (removeBtn) removeBtn.style.display = "none";
+    }
+
+    fileInput.addEventListener("change", function () {
+        if (this.files && this.files.length) {
+            filename.textContent = this.files[0].name;
+            if (removeBtn) removeBtn.style.display = "inline-flex";
+            if (savedResume) savedResume.value = "";
+        } else {
+            clearSelectedFile();
+        }
+    });
+
+    if (removeBtn) {
+        removeBtn.addEventListener("click", function () {
+            clearSelectedFile();
+        });
+    }
+
+    if (savedResume) {
+        savedResume.addEventListener("change", function () {
+            if (this.value) {
+                clearSelectedFile();
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

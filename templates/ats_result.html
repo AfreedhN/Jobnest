@@ -1,0 +1,276 @@
+{% extends 'base.html' %}
+
+{% block title %}ATS Result | JobNest{% endblock %}
+
+{% block content %}
+
+<section class="section">
+
+<div class="container">
+
+    <div class="page-header">
+
+        <span class="section-label">JOBNEST ATS</span>
+
+        <h1>ATS Compatibility Report</h1>
+
+        <p>
+            {% if report.resume %}
+                {{ report.resume.title|default:report.resume.resume_file.name|default:"Selected resume" }}
+            {% else %}
+                Selected resume
+            {% endif %}
+            ·
+            {% if report.job %}
+                {{ report.job.title|default:"Selected job" }}
+            {% else %}
+                Selected job
+            {% endif %}
+        </p>
+
+    </div>
+
+
+    <div class="ats-result-grid">
+
+
+        <div class="score-card">
+
+            <div class="score-circle">
+
+                <strong>
+                    {{ report.overall_score }}
+                </strong>
+
+                <span>/100</span>
+
+            </div>
+
+            <h2>
+                JobNest ATS Compatibility Score
+            </h2>
+
+            <p>
+                This is an estimated compatibility score,
+                not an official ATS score.
+            </p>
+
+        </div>
+
+
+        <div class="content-card">
+
+            <h2>Score Breakdown</h2>
+
+
+            <div class="score-row">
+
+                <div>
+                    <span>Skills</span>
+                    <strong>{{ report.skills_score }}/40</strong>
+                </div>
+
+                <div class="progress">
+                    <span class="progress-fill" data-width="{% widthratio report.skills_score 40 100 %}"></span>
+                </div>
+
+            </div>
+
+
+            <div class="score-row">
+
+                <div>
+                    <span>Experience</span>
+                    <strong>{{ report.experience_score }}/25</strong>
+                </div>
+
+                <div class="progress">
+                    <span class="progress-fill" data-width="{% widthratio report.experience_score 25 100 %}"></span>
+                </div>
+
+            </div>
+
+
+            <div class="score-row">
+
+                <div>
+                    <span>Keywords</span>
+                    <strong>{{ report.keywords_score }}/20</strong>
+                </div>
+
+                <div class="progress">
+                    <span class="progress-fill" data-width="{% widthratio report.keywords_score 20 100 %}"></span>
+                </div>
+
+            </div>
+
+
+            <div class="score-row">
+
+                <div>
+                    <span>Education</span>
+                    <strong>{{ report.education_score }}/10</strong>
+                </div>
+
+                <div class="progress">
+                    <span class="progress-fill" data-width="{% widthratio report.education_score 10 100 %}"></span>
+                </div>
+
+            </div>
+
+
+            <div class="score-row">
+
+                <div>
+                    <span>Structure</span>
+                    <strong>{{ report.structure_score }}/5</strong>
+                </div>
+
+                <div class="progress">
+                    <span class="progress-fill" data-width="{% widthratio report.structure_score 5 100 %}"></span>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="ats-details-grid">
+
+
+        <div class="content-card">
+
+            <h2>Matched Skills</h2>
+
+            <div class="skill-tags">
+
+                {% for skill in report.matched_skills %}
+
+                    <span class="matched">
+                        {{ skill }}
+                    </span>
+
+                {% empty %}
+
+                    <p>No matching skills found.</p>
+
+                {% endfor %}
+
+            </div>
+
+        </div>
+
+
+        <div class="content-card">
+
+            <h2>Missing Skills</h2>
+
+            <div class="skill-tags">
+
+                {% for skill in report.missing_skills %}
+
+                    <span class="missing">
+                        {{ skill }}
+                    </span>
+
+                {% empty %}
+
+                    <p>No major missing skills.</p>
+
+                {% endfor %}
+
+            </div>
+
+        </div>
+
+
+        <div class="content-card">
+
+            <h2>Matched Keywords</h2>
+
+            <ul class="simple-list">
+
+                {% for keyword in report.matched_keywords %}
+                    <li><i class="fa-solid fa-check"></i> {{ keyword|title }}</li>
+                {% empty %}
+                    <li>No job keywords found in the resume.</li>
+                {% endfor %}
+
+            </ul>
+
+        </div>
+
+
+        <div class="content-card">
+
+            <h2>Missing Keywords</h2>
+
+            <ul class="simple-list">
+
+                {% for keyword in report.missing_keywords %}
+
+                    <li>
+                        <i class="fa-solid fa-circle"></i>
+                        {{ keyword|title }}
+                    </li>
+
+                {% empty %}
+
+                    <li>No major missing keywords.</li>
+
+                {% endfor %}
+
+            </ul>
+
+        </div>
+
+
+        <div class="content-card">
+
+            <h2>Suggestions</h2>
+
+            <ul class="suggestion-list">
+
+                {% for suggestion in report.suggestions %}
+
+                    <li>
+                        <i class="fa-solid fa-check"></i>
+                        {{ suggestion }}
+                    </li>
+
+                {% endfor %}
+
+            </ul>
+
+        </div>
+
+    </div>
+
+
+    <div class="center-action">
+
+        <a href="{% url 'ats_analyzer' %}"
+           class="btn-primary">
+
+            Analyze Another Resume
+
+        </a>
+
+    </div>
+
+</div>
+
+</section>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".progress-fill").forEach(function (bar) {
+        const width = bar.dataset.width || "0";
+        bar.style.width = width + "%";
+    });
+});
+</script>
+
+{% endblock %}

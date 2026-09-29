@@ -1,0 +1,203 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% block title %}JobNest{% endblock %}</title>
+
+    <meta name="description"
+          content="JobNest - Find jobs, upload resumes and analyze your ATS compatibility.">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+          rel="stylesheet">
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=12">
+    <link rel="stylesheet" href="{% static 'css/auth.css' %}?v=3">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'css/jobs.css' %}?v=1">
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+
+<header class="navbar">
+    <div class="container nav-container">
+
+        <a href="{% url 'home' %}" class="logo">
+            <i class="fa-solid fa-briefcase"></i>
+            Job<span>Nest</span>
+        </a>
+
+        <nav class="nav-links">
+            {% if user.is_authenticated %}
+
+                <a href="{% url 'home' %}">Home</a>
+                <a href="{% url 'jobs:job_list' %}">Jobs</a>
+                <a href="{% url 'companies:company_list' %}">Companies</a>
+                <a href="{% url 'resume' %}">Resume</a>
+                <a href="{% url 'my_applications' %}">Applications</a>
+
+                {% if user.profile.account_type == 'recruiter' %}
+                    <a href="{% url 'recruiter_dashboard' %}">Dashboard</a>
+                {% else %}
+                    <a href="{% url 'dashboard:dashboard_home' %}">Dashboard</a>
+                {% endif %}
+
+                <a href="{% url 'profile' %}">
+                    <i class="fa-regular fa-user"></i>
+                    Profile
+                </a>
+
+                <a href="{% url 'logout' %}" class="nav-btn">
+                    Logout
+                </a>
+
+            {% else %}
+
+                <a href="{% url 'login' %}">Login</a>
+
+                <a href="{% url 'register' %}" class="nav-btn">
+                    Get Started
+                </a>
+
+            {% endif %}
+        </nav>
+
+        <button class="menu-toggle" id="mobileMenu" aria-label="Open navigation menu" aria-expanded="false">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+
+    </div>
+</header>
+
+
+{% if messages %}
+<div class="messages container">
+
+    {% for message in messages %}
+
+        <div class="message {{ message.tags }}"{% if 'application-submitted' in message.tags or 'account-success' in message.tags %} role="status" aria-live="polite"{% endif %}>
+            {% if 'login-success' in message.tags or 'profile-success' in message.tags or 'register-success' in message.tags or 'account-success' in message.tags %}
+                <span class="account-success-icon" aria-hidden="true">✓</span>
+                <strong>{{ message }}</strong>
+            {% elif 'application-submitted' in message.tags %}
+                <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                <div class="message-copy">
+                    <strong>Application Submitted Successfully!</strong>
+                    <p>Your application has been successfully submitted for this position.</p>
+                </div>
+            {% else %}
+                <span>{{ message }}</span>
+            {% endif %}
+
+            {% if 'account-success' not in message.tags %}
+                <button type="button" aria-label="Dismiss message" onclick="this.parentElement.remove()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            {% endif %}
+        </div>
+
+        {% if 'account-success' in message.tags %}
+            <script>
+                (function () {
+                    const toast = document.currentScript.previousElementSibling;
+                    if (!toast || !toast.matches(".message.account-success")) return;
+
+                    toast.dataset.dismissScheduled = "true";
+                    window.setTimeout(function () {
+                        toast.style.opacity = "0";
+                        toast.style.transform = "translateY(-5px)";
+
+                        window.setTimeout(function () {
+                            toast.remove();
+                        }, 300);
+                    }, 3000);
+                })();
+            </script>
+        {% endif %}
+
+    {% endfor %}
+
+</div>
+{% endif %}
+
+
+<main>
+    {% block content %}
+    {% endblock %}
+</main>
+
+
+<footer class="footer">
+
+    <div class="container footer-grid">
+
+        <div>
+            <a href="{% url 'home' %}" class="logo">
+                <i class="fa-solid fa-briefcase"></i>
+                Job<span>Nest</span>
+            </a>
+
+            <p>
+                Find your next opportunity with JobNest.
+                Discover jobs, companies and build a stronger resume.
+            </p>
+        </div>
+
+        <div>
+            <h4>Quick Links</h4>
+
+            <a href="{% url 'jobs:job_list' %}">Find Jobs</a>
+            <a href="{% url 'companies:company_list' %}">Companies</a>
+            <a href="{% url 'home' %}">Home</a>
+        </div>
+
+        <div>
+            <h4>For Job Seekers</h4>
+
+            <a href="{% url 'resume' %}">Resume</a>
+            <a href="{% url 'ats_analyzer' %}">ATS Analyzer</a>
+            <a href="{% url 'my_applications' %}">Applications</a>
+        </div>
+
+        <div>
+            <h4>Contact</h4>
+
+            <p>
+                <i class="fa-solid fa-envelope"></i>
+                support@jobnest.com
+            </p>
+
+            <p>
+                <i class="fa-solid fa-location-dot"></i>
+                Chennai, India
+            </p>
+        </div>
+
+    </div>
+
+    <div class="footer-bottom">
+        <p>© 2026 JobNest. All rights reserved.</p>
+    </div>
+
+</footer>
+
+
+<script src="{% static 'css/js/main.js' %}?v=12"></script>
+<script src="{% static 'css/js/jobs.js' %}"></script>
+<script src="{% static 'css/js/validation.js' %}"></script>
+<script src="{% static 'css/js/dashboard.js' %}"></script>
+
+{% block extra_js %}
+{% endblock %}
+
+</body>
+</html>

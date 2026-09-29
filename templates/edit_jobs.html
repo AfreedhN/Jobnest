@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Job | JobNest{% endblock %}
+
+{% block content %}
+
+<section class="section">
+
+<div class="container small-container">
+
+    <div class="page-header">
+
+        <span class="section-label">RECRUITER</span>
+
+        <h1>Edit Job</h1>
+
+        <p>
+            Update your job posting.
+        </p>
+
+    </div>
+
+
+    <div class="content-card">
+
+        <form method="POST">
+
+            {% csrf_token %}
+
+
+            <div class="form-group">
+
+                <label>Job Title</label>
+
+                <input type="text"
+                       name="title"
+                       value="{{ job.title }}"
+                       required>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>Job Description</label>
+
+                <textarea name="description"
+                          rows="7"
+                          required>{{ job.description }}</textarea>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>Responsibilities</label>
+
+                <textarea name="responsibilities"
+                          rows="7"
+                          required>{{ job.responsibilities }}</textarea>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>Requirements</label>
+
+                <textarea name="requirements"
+                          rows="7"
+                          required>{{ job.requirements }}</textarea>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>Required Skills</label>
+
+                <textarea name="required_skills"
+                          rows="4"
+                          required>{{ job.required_skills }}</textarea>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>Preferred Skills</label>
+
+                <textarea name="preferred_skills"
+                          rows="4">{{ job.preferred_skills }}</textarea>
+
+            </div>
+
+
+            <div class="form-row">
+
+                <div class="form-group">
+
+                    <label>Location</label>
+
+                    <input type="text"
+                           name="location"
+                           value="{{ job.location }}"
+                           required>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>Work Mode</label>
+
+                    <select name="work_mode">
+
+                        {% for value,label in job.WORK_MODE_CHOICES %}
+
+                        <option value="{{ value }}"
+                            {% if job.work_mode == value %}
+                                selected
+                            {% endif %}>
+                            {{ label }}
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+            </div>
+
+
+            <div class="form-row">
+
+                <div class="form-group">
+
+                    <label>Job Type</label>
+
+                    <select name="job_type">
+
+                        {% for value,label in job.JOB_TYPE_CHOICES %}
+
+                        <option value="{{ value }}"
+                            {% if job.job_type == value %}
+                                selected
+                            {% endif %}>
+                            {{ label }}
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>Experience</label>
+
+                    <select name="experience_level">
+
+                        {% for value,label in job.EXPERIENCE_CHOICES %}
+
+                        <option value="{{ value }}"
+                            {% if job.experience_level == value %}
+                                selected
+                            {% endif %}>
+                            {{ label }}
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+            </div>
+
+
+            <div class="form-actions">
+
+                <a href="{% url 'manage_jobs' %}"
+                   class="btn-secondary">
+                    Cancel
+                </a>
+
+                <button type="submit"
+                        class="btn-primary">
+                    Update Job
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+</section>
+
+{% endblock %}

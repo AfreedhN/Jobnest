@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Apply - {{ job.title }} | JobNest{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/account-pages.css' %}?v=2">
+{% endblock %}
+
+{% block content %}
+
+<section class="section">
+
+<div class="container small-container">
+
+    <div class="page-header">
+
+        <span class="section-label">APPLICATION</span>
+
+        <h1>Apply for {{ job.title }}</h1>
+
+        <p>
+            {{ job.company.name }}
+        </p>
+
+    </div>
+
+
+    <div class="content-card">
+
+        <form method="POST" enctype="multipart/form-data" class="apply-form">
+
+            {% csrf_token %}
+
+
+            {% if error %}
+
+                <div class="form-error">
+                    {{ error }}
+                </div>
+
+            {% endif %}
+
+
+            {% if error %}
+                <div class="form-error" role="alert">{{ error }}</div>
+            {% endif %}
+
+            {% if resumes %}
+                <fieldset class="apply-resume-fieldset">
+                    <legend>Choose a saved resume</legend>
+                    <p class="apply-form__hint">Select one, or upload a new file below.</p>
+                    <div class="apply-resume-list">
+                        {% for resume in resumes %}
+                            <label class="apply-resume-option">
+                                <input type="radio" name="resume" value="{{ resume.id }}"
+                                       {% if resume.is_primary %}checked{% endif %}>
+                                <span class="apply-resume-option__icon" aria-hidden="true">
+                                    <i class="fa-solid fa-file-lines"></i>
+                                </span>
+                                <span class="apply-resume-option__details">
+                                    <strong>{{ resume.resume_file.name|cut:"resumes/" }}</strong>
+                                    <small>
+                                        {% if resume.is_primary %}Primary resume · {% endif %}
+                                        Uploaded {{ resume.uploaded_at|date:"d M Y" }}
+                                    </small>
+                                </span>
+                                <span class="apply-resume-option__radio" aria-hidden="true"></span>
+                            </label>
+                        {% endfor %}
+                    </div>
+                </fieldset>
+            {% endif %}
+
+            <div class="apply-form__divider"><span>Or upload a resume</span></div>
+
+            <div class="apply-form__upload">
+                <label for="applicationResume">Resume Upload</label>
+                <input id="applicationResume" type="file" name="resume_file"
+                       accept=".pdf,.doc,.docx" aria-describedby="applicationResumeHelp">
+                <small id="applicationResumeHelp">PDF, DOC, or DOCX. Maximum file size: 5 MB.</small>
+                <div class="apply-file-status-row" id="applyFileStatusRow" style="display: none;">
+                    <span id="applyResumeFilename" class="apply-resume-filename" aria-live="polite"></span>
+                    <button type="button"
+                            id="applyRemoveFileBtn"
+                            class="apply-remove-file-btn"
+                            title="Remove uploaded resume"
+                            aria-label="Remove uploaded resume">
+                        <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                    </button>
+                </div>
+            </div>
+
+
+            <div class="form-group">
+
+                <label>Cover Letter</label>
+
+                <textarea
+                    name="cover_letter"
+                    rows="10"
+                    placeholder="Write a short cover letter...">{{ form_data.cover_letter|default:"" }}</textarea>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>Additional Information</label>
+
+                <textarea
+                    name="additional_information"
+                    rows="5"
+                    placeholder="Anything else you want the recruiter to know?">{{ form_data.additional_information|default:"" }}</textarea>
+
+            </div>
+
+
+            <button
+                type="submit"
+                class="btn-primary full-width apply-form__submit">
+
+                Submit Application
+
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const fileInput = document.getElementById("applicationResume");
+    const statusRow = document.getElementById("applyFileStatusRow");
+    const filenameSpan = document.getElementById("applyResumeFilename");
+    const removeBtn = document.getElementById("applyRemoveFileBtn");
+    const resumeRadios = document.querySelectorAll('input[name="resume"]');
+
+    function clearUploadedFile() {
+        if (fileInput) fileInput.value = "";
+        if (filenameSpan) filenameSpan.textContent = "";
+        if (statusRow) statusRow.style.display = "none";
+    }
+
+    if (fileInput) {
+        fileInput.addEventListener("change", function () {
+            if (this.files && this.files.length) {
+                if (filenameSpan) filenameSpan.textContent = this.files[0].name;
+                if (statusRow) statusRow.style.display = "inline-flex";
+                resumeRadios.forEach(function (radio) {
+                    radio.checked = false;
+                });
+            } else {
+                clearUploadedFile();
+            }
+        });
+    }
+
+    if (removeBtn) {
+        removeBtn.addEventListener("click", function () {
+            clearUploadedFile();
+        });
+    }
+
+    resumeRadios.forEach(function (radio) {
+        radio.addEventListener("change", function () {
+            if (this.checked) {
+                clearUploadedFile();
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

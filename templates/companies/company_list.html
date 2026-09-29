@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Explore Companies | JobNest{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/company-list.css' %}">
+    <link rel="stylesheet" href="{% static 'css/listing-dialog.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<section class="company-directory">
+    <div class="company-directory__intro">
+        <div class="container">
+            <p class="company-directory__eyebrow">The people behind the work</p>
+            <h1>Find a company<br>that feels like <span>your next move.</span></h1>
+            <p class="company-directory__lede">Explore teams, industries, and workplaces hiring on JobNest.</p>
+            <div class="company-directory__total">
+                <strong id="companyResultCount">{{ companies|length }}</strong>
+                <span>companies to explore</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="container company-directory__body">
+        <form class="company-filters" id="companyFilterForm" method="get">
+            <label class="company-filters__search">
+                <span class="sr-only">Search companies</span>
+                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                <input id="companySearch" type="search" name="search" value="{{ search }}" placeholder="Company name or keyword">
+            </label>
+            <label>
+                <span class="sr-only">Industry</span>
+                <select id="companyIndustry" name="industry" aria-label="Filter by industry" onchange="this.form.submit()">
+                    <option value="">All industries</option>
+                    {% for industry in industries %}
+                        <option value="{{ industry }}" {% if selected_industry == industry %}selected{% endif %}>{{ industry }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>
+                <span class="sr-only">Location</span>
+                <select id="companyLocation" name="location" aria-label="Filter by location" onchange="this.form.submit()">
+                    <option value="">All locations</option>
+                    {% for location in locations %}
+                        <option value="{{ location }}" {% if selected_location == location %}selected{% endif %}>{{ location }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <button class="company-filters__submit" type="submit">
+                <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                <span class="sr-only">Search</span>
+            </button>
+            {% if search or selected_industry or selected_location or keyword or name %}
+                <a class="company-filters__reset" href="{% url 'companies:company_list' %}">Clear</a>
+            {% endif %}
+        </form>
+
+        <div class="company-directory__heading">
+            <div>
+                <p class="company-directory__eyebrow">Browse the directory</p>
+                <h2>Companies worth knowing</h2>
+            </div>
+            <div class="company-directory__actions">
+                <span class="company-directory__live-count" aria-live="polite"><span id="companyVisibleCount">{{ companies|length }}</span> shown</span>
+                {% if is_recruiter %}
+                    <button class="company-directory__add" type="button" data-open-dialog="addCompanyDialog" aria-haspopup="dialog">
+                        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                        Add Company
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="company-grid" id="companyGrid">
+            {% for company in companies %}
+                <article class="company-card">
+                    <a class="company-card__link" href="{% url 'companies:company_detail' company.pk %}" aria-label="View {{ company.name }}"></a>
+                    <div class="company-card__topline">
+                        {% if company.logo %}
+                            <img class="company-card__logo" src="{{ company.logo.url }}" alt="{{ company.name }} logo" loading="lazy">
+                        {% else %}
+                            <span class="company-card__monogram" aria-hidden="true">{{ company.name|slice:":1"|upper }}</span>
+                        {% endif %}
+                        <i class="fa-solid fa-arrow-up-right-from-square company-card__arrow" aria-hidden="true"></i>
+                    </div>
+                    <p class="company-card__industry">{{ company.industry }}</p>
+                    <h3>
+                        {{ company.name }}
+                        {% if company.is_verified %}
+                            <i class="fa-solid fa-circle-check" title="Verified Company" style="color: #2563eb; font-size: 14px; margin-left: 4px;"></i>
+                        {% endif %}
+                    </h3>
+                    <p class="company-card__location"><i class="fa-solid fa-location-dot" aria-hidden="true"></i>{{ company.location }}</p>
+                    {% if company.description %}
+                        <p class="company-card__description">{{ company.description|truncatechars:130 }}</p>
+                    {% else %}
+                        <p class="company-card__description">Discover what makes {{ company.name }} a place to grow.</p>
+                    {% endif %}
+                    <div style="display: flex; gap: 8px; align-items: center; margin-top: 6px; flex-wrap: wrap;">
+                        {% if company.is_verified %}
+                            <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; color: #166534; background: #dcfce7; padding: 2px 6px; border-radius: 4px;">
+                                <i class="fa-solid fa-circle-check"></i> Verified
+                            </span>
+                        {% elif company.is_suspended %}
+                            <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; color: #991b1b; background: #fee2e2; padding: 2px 6px; border-radius: 4px;">
+                                <i class="fa-solid fa-ban"></i> Suspended
+                            </span>
+                        {% elif company.is_rejected %}
+                            <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; color: #374151; background: #f3f4f6; padding: 2px 6px; border-radius: 4px;">
+                                <i class="fa-solid fa-triangle-exclamation"></i> Rejected
+                            </span>
+                        {% else %}
+                            <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; color: #854d0e; background: #fef9c3; padding: 2px 6px; border-radius: 4px;">
+                                <i class="fa-solid fa-clock"></i> Unverified
+                            </span>
+                        {% endif %}
+                        {% if company.company_size %}
+                            <span class="company-card__size"><i class="fa-solid fa-people-group" aria-hidden="true"></i>{{ company.get_company_size_display }}</span>
+                        {% endif %}
+                    </div>
+                </article>
+            {% empty %}
+                <div class="company-empty" id="companyEmptyState">
+                    <span class="company-empty__icon"><i class="fa-regular fa-building" aria-hidden="true"></i></span>
+                    <h3>No results found</h3>
+                    <p>No companies found matching your search or filter criteria. Try another keyword, industry, or location.</p>
+                    <a href="{% url 'companies:company_list' %}">View all companies</a>
+                </div>
+            {% endfor %}
+        </div>
+        {% if companies %}
+            <p class="company-empty company-empty--filtered" id="companyLiveEmpty" hidden>No results found matching your search. Try another keyword or filter.</p>
+        {% endif %}
+
+        {% if is_recruiter %}
+            <dialog class="listing-dialog" id="addCompanyDialog" aria-labelledby="addCompanyDialogTitle"{% if show_company_form %} data-reopen="true"{% endif %}>
+                <header class="listing-dialog__header">
+                    <div>
+                        <p class="company-directory__eyebrow">Recruiter workspace</p>
+                        <h2 id="addCompanyDialogTitle">Add a company</h2>
+                        <p>Add a company profile to connect its open roles with candidates.</p>
+                    </div>
+                    <form method="dialog">
+                        <button class="listing-dialog__close" type="submit" aria-label="Close add company form">
+                            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                        </button>
+                    </form>
+                </header>
+                <form class="listing-dialog__form" method="post" enctype="multipart/form-data" action="{% url 'companies:company_list' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_action" value="add_company">
+                    <div class="listing-dialog__fields">
+                        {% for field in company_form %}
+                            <div class="listing-dialog__field{% if field.name == 'description' or field.name == 'about_company' %} listing-dialog__field--wide{% endif %}">
+                                {{ field.label_tag }}
+                                {{ field }}
+                                {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
+                                {% for error in field.errors %}<span class="listing-dialog__error" role="alert">{{ error }}</span>{% endfor %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <footer class="listing-dialog__footer">
+                        <button class="listing-dialog__cancel" type="button" data-close-dialog>Cancel</button>
+                        <button class="company-directory__add" type="submit">
+                            <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                            Add Company
+                        </button>
+                    </footer>
+                </form>
+            </dialog>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'css/js/company-list.js' %}" defer></script>
+    <script src="{% static 'css/js/list-dialogs.js' %}" defer></script>
+{% endblock %}

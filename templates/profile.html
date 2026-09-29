@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Profile | JobNest{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/profile.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="profile-page">
+    <header class="profile-hero">
+        <div class="container">
+            <p class="profile-eyebrow">Your professional profile</p>
+            <div class="profile-identity">
+                {% if profile.profile_photo %}
+                    <img class="profile-avatar" src="{{ profile.profile_photo.url }}" alt="{{ user.get_full_name|default:user.username }}">
+                {% else %}
+                    <span class="profile-avatar profile-avatar--placeholder" aria-hidden="true">
+                        {{ user.first_name|default:user.username|slice:":1"|upper }}
+                    </span>
+                {% endif %}
+                <div class="profile-identity__copy">
+                    <h1>{{ user.get_full_name|default:user.username }}</h1>
+                    <p>{{ profile.professional_headline|default:"Add a headline to introduce your experience and goals." }}</p>
+                    <div class="profile-meta">
+                        {% if profile.location %}
+                            <span><i class="fa-solid fa-location-dot" aria-hidden="true"></i>{{ profile.location }}</span>
+                        {% endif %}
+                        <span><i class="fa-solid fa-user-tag" aria-hidden="true"></i>{{ profile.get_account_type_display }}</span>
+                    </div>
+                </div>
+                <a href="{% url 'edit_profile' %}" class="profile-edit">
+                    <i class="fa-solid fa-pen" aria-hidden="true"></i>
+                    Edit profile
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <div class="container profile-layout">
+        <main class="profile-main">
+            <section class="profile-section">
+                <p class="profile-eyebrow">Overview</p>
+                <h2>About</h2>
+                <p>{{ profile.about|default:"Add a short introduction about your professional background and what you are looking for."|linebreaksbr }}</p>
+            </section>
+
+            <section class="profile-section">
+                <p class="profile-eyebrow">Capabilities</p>
+                <h2>Skills</h2>
+                {% if skills %}
+                    <ul class="profile-skills">
+                        {% for skill in skills %}<li>{{ skill }}</li>{% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="profile-empty">Add your strongest skills to help employers find you.</p>
+                {% endif %}
+            </section>
+
+            <section class="profile-section">
+                <p class="profile-eyebrow">Career history</p>
+                <h2>Experience</h2>
+                <p>{{ profile.experience|default:"Your experience will appear here when you add it to your profile."|linebreaksbr }}</p>
+            </section>
+
+            <section class="profile-section">
+                <p class="profile-eyebrow">Learning</p>
+                <h2>Education</h2>
+                <p>{{ profile.education|default:"Add your education and qualifications to complete your profile."|linebreaksbr }}</p>
+            </section>
+        </main>
+
+        <aside class="profile-sidebar">
+            <section class="profile-aside-section">
+                <h2>Contact</h2>
+                {% if user.email %}
+                    <a class="profile-contact" href="mailto:{{ user.email }}">
+                        <i class="fa-regular fa-envelope" aria-hidden="true"></i>
+                        <span><small>Email</small><strong>{{ user.email }}</strong></span>
+                    </a>
+                {% endif %}
+                {% if profile.phone %}
+                    <a class="profile-contact" href="tel:{{ profile.phone }}">
+                        <i class="fa-solid fa-phone" aria-hidden="true"></i>
+                        <span><small>Phone</small><strong>{{ profile.phone }}</strong></span>
+                    </a>
+                {% endif %}
+            </section>
+
+            <section class="profile-aside-section">
+                <h2>Online profiles</h2>
+                {% if profile.linkedin %}
+                    <a class="profile-link" href="{{ profile.linkedin }}" target="_blank" rel="noopener noreferrer">
+                        <i class="fa-brands fa-linkedin" aria-hidden="true"></i>LinkedIn
+                        <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                    </a>
+                {% endif %}
+                {% if profile.github %}
+                    <a class="profile-link" href="{{ profile.github }}" target="_blank" rel="noopener noreferrer">
+                        <i class="fa-brands fa-github" aria-hidden="true"></i>GitHub
+                        <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                    </a>
+                {% endif %}
+                {% if profile.portfolio %}
+                    <a class="profile-link" href="{{ profile.portfolio }}" target="_blank" rel="noopener noreferrer">
+                        <i class="fa-solid fa-globe" aria-hidden="true"></i>Portfolio
+                        <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                    </a>
+                {% endif %}
+                {% if not profile.linkedin and not profile.github and not profile.portfolio %}
+                    <p class="profile-empty">Add LinkedIn, GitHub, or a portfolio link to share your work.</p>
+                {% endif %}
+            </section>
+        </aside>
+    </div>
+</section>
+
+{% endblock %}

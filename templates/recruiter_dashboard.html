@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+
+{% block title %}Recruiter Dashboard | JobNest{% endblock %}
+
+{% block content %}
+
+<section class="section">
+
+<div class="container">
+
+    <div class="dashboard-header">
+
+        <div>
+
+            <span class="section-label">
+                RECRUITER
+            </span>
+
+            <h1>
+                Welcome, {{ user.first_name|default:user.username }}
+            </h1>
+
+            <p>
+                Manage your jobs and candidates.
+            </p>
+
+        </div>
+
+
+        <a href="{% url 'post_job' %}"
+           class="btn-primary">
+
+            <i class="fa-solid fa-plus"></i>
+            Post New Job
+
+        </a>
+
+    </div>
+
+
+    <div class="dashboard-stats">
+
+        <div class="dashboard-stat">
+
+            <i class="fa-solid fa-briefcase"></i>
+
+            <span>Total Jobs</span>
+
+            <strong>
+                {{ total_jobs|default:"0" }}
+            </strong>
+
+        </div>
+
+
+        <div class="dashboard-stat">
+
+            <i class="fa-solid fa-circle-check"></i>
+
+            <span>Active Jobs</span>
+
+            <strong>
+                {{ active_jobs|default:"0" }}
+            </strong>
+
+        </div>
+
+
+        <div class="dashboard-stat">
+
+            <i class="fa-solid fa-file-lines"></i>
+
+            <span>Applications</span>
+
+            <strong>
+                {{ total_applications|default:"0" }}
+            </strong>
+
+        </div>
+
+
+        <div class="dashboard-stat">
+
+            <i class="fa-solid fa-star"></i>
+
+            <span>Shortlisted</span>
+
+            <strong>
+                {{ shortlisted|default:"0" }}
+            </strong>
+
+        </div>
+
+
+        <div class="dashboard-stat">
+
+            <i class="fa-solid fa-calendar-check"></i>
+
+            <span>Interviews</span>
+
+            <strong>
+                {{ interviews|default:"0" }}
+            </strong>
+
+        </div>
+
+    </div>
+
+
+    <div class="dashboard-grid">
+
+        <div class="content-card">
+
+            <div class="section-header">
+
+                <h2>Recent Applications</h2>
+
+                <a href="{% url 'manage_applicants' %}"
+                   class="text-link">
+                    View All
+                </a>
+
+            </div>
+
+
+            {% for application in recent_applications %}
+
+            <div class="applicant-row">
+
+                <div class="avatar">
+
+                    {{ application.applicant.first_name|first|upper }}
+
+                </div>
+
+
+                <div>
+
+                    <strong>
+                        {{ application.applicant.get_full_name|default:application.applicant.username }}
+                    </strong>
+
+                    <p>
+                        {{ application.job.title }}
+                    </p>
+
+                </div>
+
+
+                <span class="status status-{{ application.status }}">
+                    {{ application.get_status_display }}
+                </span>
+
+            </div>
+
+            {% empty %}
+
+            <p>No applications yet.</p>
+
+            {% endfor %}
+
+        </div>
+
+
+        <div class="content-card">
+
+            <div class="section-header">
+
+                <h2>Your Jobs</h2>
+
+                <a href="{% url 'manage_jobs' %}"
+                   class="text-link">
+                    Manage
+                </a>
+
+            </div>
+
+
+            {% for job in jobs %}
+
+            <div class="mini-job-card">
+
+                <div>
+
+                    <strong>
+                        {{ job.title }}
+                    </strong>
+
+                    <p>
+                        {{ job.applications.count }} applications
+                    </p>
+
+                </div>
+
+                <a href="{% url 'jobs:edit_job' job.id %}">
+                    <i class="fa-solid fa-pen"></i>
+                </a>
+
+            </div>
+
+            {% empty %}
+
+            <p>No jobs posted yet.</p>
+
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+</div>
+
+</section>
+
+{% endblock %}

@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Resume | JobNest{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/account-pages.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<section class="section account-page">
+    <div class="container">
+        <header class="account-page__header">
+            <div>
+                <p class="account-page__eyebrow">Career toolkit</p>
+                <h1>My Resumes</h1>
+                <p>Keep your application documents organized and ready to share.</p>
+            </div>
+            <div class="account-page__header-actions">
+                <a href="{% url 'resume_upload' %}" class="btn-primary">
+                    <i class="fa-solid fa-upload" aria-hidden="true"></i>
+                    Upload resume
+                </a>
+                <a href="{% url 'ats_analyzer' %}" class="btn-secondary">
+                    <i class="fa-solid fa-chart-line" aria-hidden="true"></i>
+                    ATS analyzer
+                </a>
+            </div>
+        </header>
+
+        <p class="account-page__summary">
+            {{ resumes|length }} resume{{ resumes|length|pluralize }}
+        </p>
+
+        {% if resumes %}
+            <div class="resume-grid">
+                {% for resume in resumes %}
+                    <article class="resume-card">
+                        <div class="resume-card__topline">
+                            <span class="resume-card__icon" aria-hidden="true">
+                                {% if '.pdf' in resume.resume_file.name|lower %}
+                                    <i class="fa-solid fa-file-pdf"></i>
+                                {% else %}
+                                    <i class="fa-solid fa-file-word"></i>
+                                {% endif %}
+                            </span>
+                            <div class="resume-card__info">
+                                <h2 title="{{ resume.resume_file.name|cut:'resumes/' }}">
+                                    {{ resume.resume_file.name|cut:"resumes/" }}
+                                </h2>
+                                <p>
+                                    <i class="fa-regular fa-calendar" aria-hidden="true"></i>
+                                    Uploaded {{ resume.uploaded_at|date:"d M Y" }}
+                                </p>
+                                {% if resume.is_primary %}
+                                    <span class="resume-primary">Primary resume</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="resume-card__actions">
+                            <a class="account-icon-button" href="{{ resume.resume_file.url }}"
+                               target="_blank" rel="noopener noreferrer"
+                               aria-label="View resume" title="View resume">
+                                <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                            </a>
+
+                            {% if not resume.is_primary %}
+                                <form method="post" action="{% url 'set_primary_resume' resume.id %}">
+                                    {% csrf_token %}
+                                    <button class="account-icon-button" type="submit"
+                                            aria-label="Set as primary resume" title="Set as primary">
+                                        <i class="fa-solid fa-star" aria-hidden="true"></i>
+                                    </button>
+                                </form>
+                            {% endif %}
+
+                            <form method="post" action="{% url 'delete_resume' resume.id %}"
+                                  onsubmit="return confirm('Delete this resume?');">
+                                {% csrf_token %}
+                                <button class="account-icon-button account-icon-button--danger"
+                                        type="submit" aria-label="Delete resume" title="Delete resume">
+                                    <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <section class="account-empty">
+                <span class="account-empty__icon" aria-hidden="true">
+                    <i class="fa-solid fa-file-arrow-up"></i>
+                </span>
+                <h2>No resumes uploaded</h2>
+                <p>Upload a resume to use it with your job applications.</p>
+                <a href="{% url 'resume_upload' %}" class="btn-primary">
+                    <i class="fa-solid fa-upload" aria-hidden="true"></i>
+                    Upload your first resume
+                </a>
+            </section>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

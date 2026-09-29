@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard | JobNest{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="section dashboard">
+    <div class="container">
+        <div class="dashboard-header">
+            <div>
+                <span class="section-label">JOB SEEKER</span>
+                <h1>Welcome back, {{ user.first_name|default:user.username }} 👋</h1>
+                <p>Track your job applications, analyze your resume, and discover new vacancies.</p>
+            </div>
+            <div class="dashboard-actions">
+                <a href="{% url 'jobs:job_list' %}" class="btn-primary">
+                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                    Explore Jobs
+                </a>
+                <a href="{% url 'ats_analyzer' %}" class="btn-secondary">
+                    <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+                    ATS Analyzer
+                </a>
+            </div>
+        </div>
+
+        <div class="dashboard-stats">
+            <div class="dashboard-stat">
+                <div class="dashboard-stat-icon">
+                    <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+                </div>
+                <strong>{{ my_application_count|default:"0" }}</strong>
+                <span>Total Applications</span>
+            </div>
+
+            <div class="dashboard-stat">
+                <div class="dashboard-stat-icon" style="background: #fef3c7; color: #b45309;">
+                    <i class="fa-solid fa-clock" aria-hidden="true"></i>
+                </div>
+                <strong>{{ pending_count|default:"0" }}</strong>
+                <span>Under Review</span>
+            </div>
+
+            <div class="dashboard-stat">
+                <div class="dashboard-stat-icon" style="background: #ede9fe; color: #6d28d9;">
+                    <i class="fa-solid fa-star" aria-hidden="true"></i>
+                </div>
+                <strong>{{ shortlisted_count|default:"0" }}</strong>
+                <span>Shortlisted</span>
+            </div>
+
+            <div class="dashboard-stat">
+                <div class="dashboard-stat-icon" style="background: #dcfce7; color: #15803d;">
+                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                </div>
+                <strong>{{ hired_count|default:"0" }}</strong>
+                <span>Selected / Offers</span>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="dashboard-main-col">
+                <div class="content-card">
+                    <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2 style="font-size: 1.25rem; font-weight: 700; color: #0f172a; margin: 0;">Recent Applications</h2>
+                        <a href="{% url 'my_applications' %}" class="text-link" style="color: #2563eb; font-weight: 600; font-size: 0.875rem;">
+                            View All ({{ my_application_count }})
+                        </a>
+                    </div>
+
+                    {% if my_applications %}
+                        <div class="dashboard-table-wrapper">
+                            <table class="dashboard-table">
+                                <thead>
+                                    <tr>
+                                        <th>Job & Company</th>
+                                        <th>Applied On</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for application in my_applications|slice:":5" %}
+                                        <tr>
+                                            <td>
+                                                <strong style="display: block; color: #0f172a;">{{ application.job.title }}</strong>
+                                                <span style="color: #64748b; font-size: 0.8125rem;">{{ application.job.company.name }}</span>
+                                            </td>
+                                            <td style="color: #64748b;">
+                                                {{ application.applied_at|date:"d M Y" }}
+                                            </td>
+                                            <td>
+                                                <span class="status status-{{ application.status }}">
+                                                    {{ application.get_status_display }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <a href="{% url 'application_details' application.id %}" class="btn-secondary" style="padding: 6px 12px; font-size: 0.8125rem;">
+                                                    View Details
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div style="text-align: center; padding: 40px 20px;">
+                            <i class="fa-regular fa-folder-open" style="font-size: 2.5rem; color: #94a3b8; margin-bottom: 12px;"></i>
+                            <h3 style="font-size: 1.1rem; color: #1e293b; margin-bottom: 6px;">No applications yet</h3>
+                            <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 20px;">Start exploring active jobs and apply to roles matching your skills.</p>
+                            <a href="{% url 'jobs:job_list' %}" class="btn-primary" style="display: inline-flex;">
+                                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Find Jobs
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="dashboard-sidebar">
+                <div class="content-card">
+                    <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <h2 style="font-size: 1.1rem; font-weight: 700; color: #0f172a; margin: 0;">Latest Active Jobs</h2>
+                        <a href="{% url 'jobs:job_list' %}" class="text-link" style="color: #2563eb; font-weight: 600; font-size: 0.8125rem;">Explore</a>
+                    </div>
+
+                    {% for job in latest_jobs|slice:":4" %}
+                        <div class="mini-job-card" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f1f5f9;">
+                            <div>
+                                <strong style="display: block; font-size: 0.9375rem; color: #0f172a;">
+                                    <a href="{% url 'job_details' job.id %}" style="color: inherit; text-decoration: none;">{{ job.title }}</a>
+                                </strong>
+                                <span style="font-size: 0.8125rem; color: #64748b;">
+                                    {{ job.company.name }} &bull; {{ job.location }}
+                                </span>
+                            </div>
+                            <a href="{% url 'job_details' job.id %}" class="btn-secondary" style="padding: 5px 10px; font-size: 0.75rem;">
+                                View
+                            </a>
+                        </div>
+                    {% empty %}
+                        <p style="color: #64748b; font-size: 0.875rem;">No active jobs at the moment.</p>
+                    {% endfor %}
+                </div>
+
+                <div class="dashboard-menu">
+                    <a href="{% url 'my_applications' %}">
+                        <i class="fa-solid fa-file-lines" aria-hidden="true"></i>
+                        <span>My Applications</span>
+                    </a>
+                    <a href="{% url 'resume' %}">
+                        <i class="fa-solid fa-file-arrow-up" aria-hidden="true"></i>
+                        <span>Manage Resumes</span>
+                    </a>
+                    <a href="{% url 'ats_analyzer' %}">
+                        <i class="fa-solid fa-chart-line" aria-hidden="true"></i>
+                        <span>ATS Resume Checker</span>
+                    </a>
+                    <a href="{% url 'profile' %}">
+                        <i class="fa-regular fa-user" aria-hidden="true"></i>
+                        <span>My Profile</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

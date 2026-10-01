@@ -1,63 +1,58 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Upload Resume | JobNest{% endblock %}
 
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/resumes.css' %}?v=1">
+{% endblock %}
+
 {% block content %}
 
-<section class="section">
+<section class="resume-section">
 
-<div class="container small-container">
+<div class="resume-container" style="max-width: 680px;">
 
-    <div class="page-header">
-
-        <span class="section-label">RESUME</span>
-
-        <h1>Upload Resume</h1>
-
-        <p>
-            Upload your latest PDF or DOCX resume.
-        </p>
-
+    <div class="app-page-header" style="margin-bottom: 24px;">
+        <div class="app-page-header-info">
+            <span class="resume-eyebrow">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Document Upload
+            </span>
+            <h1>Upload Resume</h1>
+            <p>
+                Add your latest PDF or DOCX resume to apply for jobs and check ATS compatibility.
+            </p>
+        </div>
     </div>
 
-
-    <div class="content-card">
+    <div class="resume-upload-card" style="margin-bottom: 0;">
 
         <form method="POST"
               enctype="multipart/form-data"
               id="resumeUploadForm">
-
             {% csrf_token %}
 
+            <div class="resume-drop-zone" onclick="document.getElementById('resumeFile').click();">
 
-            <div class="upload-box">
+                <i class="fa-solid fa-cloud-arrow-up resume-drop-icon"></i>
 
-                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <h3>Select your resume file</h3>
 
-                <h3>
-                    Upload your resume
-                </h3>
+                <p>Supported file formats: PDF, DOC, DOCX · Maximum file size: 5 MB</p>
 
-                <p>
-                    PDF or DOCX · Maximum 5 MB
-                </p>
+                <input type="file"
+                       name="resume_file"
+                       id="resumeFile"
+                       class="resume-file-input-hidden"
+                       accept=".pdf,.doc,.docx"
+                       required>
 
-
-                <input
-                    type="file"
-                    name="resume_file"
-                    id="resumeFile"
-                    accept=".pdf,.docx"
-                    required>
-
-
-                <label for="resumeFile"
-                       class="btn-secondary">
-                    Choose File
-                </label>
-
+                <button type="button" class="resume-choose-btn">
+                    <i class="fa-regular fa-folder-open"></i> Choose File
+                </button>
 
                 <div class="resume-file-status-row" id="resumeFileStatusRow">
+                    <i class="fa-regular fa-file-lines" style="color: #2563eb;"></i>
                     <span id="fileName">No file selected</span>
                     <button type="button"
                             id="resumeRemoveFileBtn"
@@ -71,33 +66,32 @@
 
             </div>
 
-
-            <label class="checkbox-label">
-
-                <input
-                    type="checkbox"
-                    name="is_primary">
-
-                Set as primary resume
-
-            </label>
-
+            <div style="margin: 18px 0;">
+                <label class="resume-checkbox-label">
+                    <input type="checkbox"
+                           name="is_primary"
+                           id="isPrimary">
+                    <span>Set as primary resume for fast one-click applications</span>
+                </label>
+            </div>
 
             {% if error %}
-
-                <div class="form-error">
-                    {{ error }}
+                <div style="margin-bottom: 16px; padding: 12px 14px; background: #fff3f3; border: 1px solid #efcccc; border-radius: 8px; color: #dc2626; font-size: 13px; font-weight: 500;">
+                    <i class="fa-solid fa-triangle-exclamation"></i> {{ error }}
                 </div>
-
             {% endif %}
 
+            <div style="display: flex; gap: 12px;">
+                <button type="submit"
+                        class="resume-submit-btn"
+                        style="flex: 1; justify-content: center; padding: 12px 20px;">
+                    <i class="fa-solid fa-upload"></i> Upload Resume
+                </button>
 
-            <button type="submit"
-                    class="btn-primary full-width">
-
-                Upload Resume
-
-            </button>
+                <a href="{% url 'resume' %}" class="btn-secondary" style="padding: 10px 18px; border-radius: 8px; display: inline-flex; align-items: center;">
+                    Cancel
+                </a>
+            </div>
 
         </form>
 
@@ -108,7 +102,6 @@
 </section>
 
 {% endblock %}
-
 
 {% block extra_js %}
 <script>
@@ -134,7 +127,8 @@ if (resumeFile) {
 }
 
 if (removeBtn) {
-    removeBtn.addEventListener("click", function () {
+    removeBtn.addEventListener("click", function (e) {
+        e.stopPropagation();
         clearSelectedResume();
     });
 }

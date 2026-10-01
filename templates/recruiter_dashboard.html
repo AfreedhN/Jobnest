@@ -1,208 +1,464 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Recruiter Dashboard | JobNest{% endblock %}
 
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/recruiter.css' %}?v=1">
+{% endblock %}
+
 {% block content %}
 
-<section class="section">
+<section class="recruiter-section">
 
-<div class="container">
+<div class="recruiter-container">
 
-    <div class="dashboard-header">
+    <!-- Header Banner -->
+    <div class="recruiter-header-card">
 
-        <div>
+        <div class="recruiter-header-info">
 
-            <span class="section-label">
-                RECRUITER
-            </span>
+            <div class="recruiter-badge-row">
+                <span class="recruiter-portal-pill">
+                    <i class="fa-solid fa-briefcase"></i> Employer Portal
+                </span>
+
+                {% if recruiter_company %}
+                    <span class="recruiter-company-pill">
+                        <i class="fa-solid fa-building"></i> {{ recruiter_company.name }}
+                        {% if recruiter_company.verification_status == "verified" %}
+                            <i class="fa-solid fa-circle-check" style="color: #059669; margin-left: 2px;" title="Verified Employer"></i>
+                        {% endif %}
+                    </span>
+                {% endif %}
+            </div>
 
             <h1>
                 Welcome, {{ user.first_name|default:user.username }}
             </h1>
 
             <p>
-                Manage your jobs and candidates.
+                Track open vacancies, evaluate incoming applicants, and accelerate your hiring pipeline.
             </p>
 
         </div>
 
+        <div class="recruiter-header-actions">
 
-        <a href="{% url 'post_job' %}"
-           class="btn-primary">
+            <a href="{% url 'post_job' %}" class="recruiter-btn recruiter-btn-primary">
+                <i class="fa-solid fa-plus"></i> Post New Job
+            </a>
 
-            <i class="fa-solid fa-plus"></i>
-            Post New Job
-
-        </a>
-
-    </div>
-
-
-    <div class="dashboard-stats">
-
-        <div class="dashboard-stat">
-
-            <i class="fa-solid fa-briefcase"></i>
-
-            <span>Total Jobs</span>
-
-            <strong>
-                {{ total_jobs|default:"0" }}
-            </strong>
-
-        </div>
-
-
-        <div class="dashboard-stat">
-
-            <i class="fa-solid fa-circle-check"></i>
-
-            <span>Active Jobs</span>
-
-            <strong>
-                {{ active_jobs|default:"0" }}
-            </strong>
-
-        </div>
-
-
-        <div class="dashboard-stat">
-
-            <i class="fa-solid fa-file-lines"></i>
-
-            <span>Applications</span>
-
-            <strong>
-                {{ total_applications|default:"0" }}
-            </strong>
-
-        </div>
-
-
-        <div class="dashboard-stat">
-
-            <i class="fa-solid fa-star"></i>
-
-            <span>Shortlisted</span>
-
-            <strong>
-                {{ shortlisted|default:"0" }}
-            </strong>
-
-        </div>
-
-
-        <div class="dashboard-stat">
-
-            <i class="fa-solid fa-calendar-check"></i>
-
-            <span>Interviews</span>
-
-            <strong>
-                {{ interviews|default:"0" }}
-            </strong>
+            <a href="{% url 'manage_applicants' %}" class="recruiter-btn recruiter-btn-secondary">
+                <i class="fa-solid fa-users"></i> Review Candidates
+            </a>
 
         </div>
 
     </div>
 
 
-    <div class="dashboard-grid">
+    <!-- 4 Top Key Metric Cards -->
+    <div class="recruiter-stats-grid">
 
-        <div class="content-card">
+        <!-- 1. Total Jobs -->
+        <div class="recruiter-stat-card card-total-jobs">
 
-            <div class="section-header">
-
-                <h2>Recent Applications</h2>
-
-                <a href="{% url 'manage_applicants' %}"
-                   class="text-link">
-                    View All
-                </a>
-
+            <div class="recruiter-stat-top">
+                <span class="recruiter-stat-label">Total Jobs</span>
+                <div class="recruiter-stat-icon-wrapper icon-blue">
+                    <i class="fa-solid fa-briefcase"></i>
+                </div>
             </div>
 
+            <div class="recruiter-stat-middle">
+                <div class="recruiter-stat-number">{{ total_jobs|default:"0" }}</div>
+            </div>
 
-            {% for application in recent_applications %}
+            <div class="recruiter-stat-footer">
+                <span>All listings created</span>
+                <a href="{% url 'manage_jobs' %}" class="recruiter-stat-tag tag-neutral">
+                    Manage <i class="fa-solid fa-arrow-right"></i>
+                </a>
+            </div>
 
-            <div class="applicant-row">
+        </div>
 
-                <div class="avatar">
+        <!-- 2. Active Jobs -->
+        <div class="recruiter-stat-card card-active-jobs">
 
-                    {{ application.applicant.first_name|first|upper }}
-
+            <div class="recruiter-stat-top">
+                <span class="recruiter-stat-label">Active Jobs</span>
+                <div class="recruiter-stat-icon-wrapper icon-emerald">
+                    <i class="fa-solid fa-circle-check"></i>
                 </div>
+            </div>
 
+            <div class="recruiter-stat-middle">
+                <div class="recruiter-stat-number">{{ active_jobs|default:"0" }}</div>
+            </div>
 
-                <div>
-
-                    <strong>
-                        {{ application.applicant.get_full_name|default:application.applicant.username }}
-                    </strong>
-
-                    <p>
-                        {{ application.job.title }}
-                    </p>
-
-                </div>
-
-
-                <span class="status status-{{ application.status }}">
-                    {{ application.get_status_display }}
+            <div class="recruiter-stat-footer">
+                <span class="recruiter-stat-tag tag-active">
+                    <span class="dot"></span> Live & Accepting
                 </span>
+                <span>Open positions</span>
+            </div>
+
+        </div>
+
+        <!-- 3. Total Applications -->
+        <div class="recruiter-stat-card card-total-apps">
+
+            <div class="recruiter-stat-top">
+                <span class="recruiter-stat-label">Total Applications</span>
+                <div class="recruiter-stat-icon-wrapper icon-purple">
+                    <i class="fa-solid fa-file-lines"></i>
+                </div>
+            </div>
+
+            <div class="recruiter-stat-middle">
+                <div class="recruiter-stat-number">{{ total_applications|default:"0" }}</div>
+            </div>
+
+            <div class="recruiter-stat-footer">
+                <span>Across all postings</span>
+                <span style="font-weight: 600; color: #7c3aed;">
+                    {{ shortlisted|default:"0" }} Shortlisted
+                </span>
+            </div>
+
+        </div>
+
+        <!-- 4. Pending Applications -->
+        <div class="recruiter-stat-card card-pending-apps">
+
+            <div class="recruiter-stat-top">
+                <span class="recruiter-stat-label">Pending Applications</span>
+                <div class="recruiter-stat-icon-wrapper icon-amber">
+                    <i class="fa-solid fa-clock"></i>
+                </div>
+            </div>
+
+            <div class="recruiter-stat-middle">
+                <div class="recruiter-stat-number">{{ pending_applications|default:"0" }}</div>
+            </div>
+
+            <div class="recruiter-stat-footer">
+                <span class="recruiter-stat-tag tag-pending">
+                    <span class="dot"></span> Awaiting Review
+                </span>
+                <a href="{% url 'manage_applicants' %}" class="recruiter-stat-tag" style="color: #d97706;">
+                    Review <i class="fa-solid fa-arrow-right"></i>
+                </a>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Main 2-Column Grid (Workspace & Control Sidebar) -->
+    <div class="recruiter-dashboard-grid">
+
+        <!-- Main Column (Recent Applications & Your Jobs) -->
+        <div class="recruiter-main-col">
+
+            <!-- Recent Applications Card -->
+            <div class="recruiter-card">
+
+                <div class="recruiter-card-header">
+                    <div class="recruiter-card-title-group">
+                        <div class="recruiter-card-icon" style="background: #eff6ff; color: #2563eb;">
+                            <i class="fa-solid fa-user-clock"></i>
+                        </div>
+                        <h2>Recent Applications</h2>
+                        <span class="recruiter-count-badge">{{ recent_applications|length }}</span>
+                    </div>
+
+                    <a href="{% url 'manage_applicants' %}" class="recruiter-view-all-link">
+                        View All Pipeline <i class="fa-solid fa-chevron-right"></i>
+                    </a>
+                </div>
+
+                <div class="recruiter-applicant-list">
+                    {% for application in recent_applications %}
+                    <div class="recruiter-applicant-item">
+
+                        <div class="recruiter-applicant-profile">
+                            <div class="recruiter-avatar {% cycle '' 'recruiter-avatar-alt-1' 'recruiter-avatar-alt-2' 'recruiter-avatar-alt-3' %}">
+                                {{ application.applicant.first_name|first|default:application.applicant.username|first|upper }}
+                            </div>
+
+                            <div class="recruiter-applicant-meta">
+                                <h4 class="recruiter-applicant-name">
+                                    {{ application.applicant.get_full_name|default:application.applicant.username }}
+                                </h4>
+                                <p class="recruiter-applicant-sub">
+                                    Applied for <span class="job-name">{{ application.job.title }}</span>
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="recruiter-applicant-right">
+                            <span class="recruiter-date-pill">
+                                <i class="fa-regular fa-calendar"></i> {{ application.applied_at|date:"M d, Y" }}
+                            </span>
+
+                            <span class="recruiter-status-pill status-pill-{{ application.status }}">
+                                <span class="status-dot"></span>
+                                {{ application.get_status_display }}
+                            </span>
+
+                            <a href="{% url 'application_details' application.id %}" class="recruiter-btn-sm recruiter-btn-review" title="Review candidate details">
+                                Review <i class="fa-solid fa-arrow-right"></i>
+                            </a>
+                        </div>
+
+                    </div>
+                    {% empty %}
+                    <div class="recruiter-empty-state">
+                        <i class="fa-regular fa-folder-open"></i>
+                        <h3>No applications received yet</h3>
+                        <p>When candidates apply to your active job listings, their profiles will appear here for review.</p>
+                        <a href="{% url 'post_job' %}" class="recruiter-btn recruiter-btn-primary" style="display: inline-flex;">
+                            <i class="fa-solid fa-plus"></i> Post a Job
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
 
             </div>
 
-            {% empty %}
 
-            <p>No applications yet.</p>
+            <!-- Your Jobs Card -->
+            <div class="recruiter-card">
 
-            {% endfor %}
+                <div class="recruiter-card-header">
+                    <div class="recruiter-card-title-group">
+                        <div class="recruiter-card-icon" style="background: #f0fdf4; color: #059669;">
+                            <i class="fa-solid fa-list-check"></i>
+                        </div>
+                        <h2>Your Active Vacancies</h2>
+                        <span class="recruiter-count-badge">{{ jobs|length }}</span>
+                    </div>
+
+                    <a href="{% url 'manage_jobs' %}" class="recruiter-view-all-link">
+                        Manage All Jobs <i class="fa-solid fa-chevron-right"></i>
+                    </a>
+                </div>
+
+                <div class="recruiter-jobs-list">
+                    {% for job in jobs %}
+                    <div class="recruiter-job-item">
+
+                        <div class="recruiter-job-main">
+                            <div class="recruiter-job-title-row">
+                                <a href="{% url 'job_details' job.id %}" class="recruiter-job-title">
+                                    {{ job.title }}
+                                </a>
+
+                                {% if job.is_active %}
+                                    <span class="recruiter-status-pill status-pill-selected" style="padding: 2px 8px; font-size: 10px;">
+                                        <span class="status-dot"></span> Active
+                                    </span>
+                                {% else %}
+                                    <span class="recruiter-status-pill status-pill-rejected" style="padding: 2px 8px; font-size: 10px;">
+                                        <span class="status-dot"></span> Closed
+                                    </span>
+                                {% endif %}
+                            </div>
+
+                            <div class="recruiter-job-tags">
+                                <span class="recruiter-job-tag-item">
+                                    <i class="fa-solid fa-location-dot"></i> {{ job.location }}
+                                </span>
+                                <span class="recruiter-job-tag-item">
+                                    <i class="fa-regular fa-clock"></i> {{ job.get_job_type_display|default:job.job_type }}
+                                </span>
+                                <span class="recruiter-job-tag-item">
+                                    <i class="fa-solid fa-layer-group"></i> {{ job.get_experience_level_display|default:job.experience_level|title }} Level
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="recruiter-job-right">
+                            <a href="{% url 'manage_applicants' %}?job={{ job.id }}" class="recruiter-app-count-pill" title="View candidates for this job">
+                                <i class="fa-solid fa-users"></i>
+                                <span>{{ job.applications.count }} applicants</span>
+                            </a>
+
+                            <a href="{% url 'jobs:edit_job' job.id %}" class="recruiter-job-edit-btn" title="Edit Job Details">
+                                <i class="fa-solid fa-pen"></i>
+                            </a>
+                        </div>
+
+                    </div>
+                    {% empty %}
+                    <div class="recruiter-empty-state">
+                        <i class="fa-solid fa-briefcase"></i>
+                        <h3>No jobs posted yet</h3>
+                        <p>Create your first job listing to start attracting qualified candidates on JobNest.</p>
+                        <a href="{% url 'post_job' %}" class="recruiter-btn recruiter-btn-primary" style="display: inline-flex;">
+                            <i class="fa-solid fa-plus"></i> Post a Job
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+
+            </div>
 
         </div>
 
 
-        <div class="content-card">
+        <!-- Sidebar Column (Navigation & Pipeline Breakdown) -->
+        <div class="recruiter-sidebar-col">
 
-            <div class="section-header">
+            <!-- Recruiter Navigation Menu Card -->
+            <div class="recruiter-card">
 
-                <h2>Your Jobs</h2>
+                <div class="recruiter-card-header" style="margin-bottom: 12px; padding-bottom: 12px;">
+                    <div class="recruiter-card-title-group">
+                        <div class="recruiter-card-icon" style="background: #f5f3ff; color: #7c3aed;">
+                            <i class="fa-solid fa-compass"></i>
+                        </div>
+                        <h2>Recruiter Navigation</h2>
+                    </div>
+                </div>
 
-                <a href="{% url 'manage_jobs' %}"
-                   class="text-link">
-                    Manage
-                </a>
+                <div class="recruiter-nav-menu">
 
-            </div>
+                    <a href="{% url 'recruiter_dashboard' %}" class="recruiter-nav-item active">
+                        <div class="recruiter-nav-item-left">
+                            <i class="fa-solid fa-gauge-high"></i>
+                            <span>Dashboard Overview</span>
+                        </div>
+                        <i class="fa-solid fa-check" style="font-size: 11px;"></i>
+                    </a>
 
+                    <a href="{% url 'post_job' %}" class="recruiter-nav-item">
+                        <div class="recruiter-nav-item-left">
+                            <i class="fa-solid fa-plus-circle"></i>
+                            <span>Post a New Job</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-right" style="font-size: 10px;"></i>
+                    </a>
 
-            {% for job in jobs %}
+                    <a href="{% url 'manage_jobs' %}" class="recruiter-nav-item">
+                        <div class="recruiter-nav-item-left">
+                            <i class="fa-solid fa-briefcase"></i>
+                            <span>Manage All Jobs</span>
+                        </div>
+                        <span class="recruiter-nav-badge">{{ total_jobs|default:"0" }}</span>
+                    </a>
 
-            <div class="mini-job-card">
+                    <a href="{% url 'manage_applicants' %}" class="recruiter-nav-item">
+                        <div class="recruiter-nav-item-left">
+                            <i class="fa-solid fa-users-viewfinder"></i>
+                            <span>Candidate Pipeline</span>
+                        </div>
+                        <span class="recruiter-nav-badge">{{ total_applications|default:"0" }}</span>
+                    </a>
 
-                <div>
+                    <a href="{% url 'ats_analyzer' %}" class="recruiter-nav-item">
+                        <div class="recruiter-nav-item-left">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            <span>ATS Resume Checker</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-right" style="font-size: 10px;"></i>
+                    </a>
 
-                    <strong>
-                        {{ job.title }}
-                    </strong>
-
-                    <p>
-                        {{ job.applications.count }} applications
-                    </p>
+                    <a href="{% url 'companies:company_list' %}" class="recruiter-nav-item">
+                        <div class="recruiter-nav-item-left">
+                            <i class="fa-solid fa-building"></i>
+                            <span>Companies Directory</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-right" style="font-size: 10px;"></i>
+                    </a>
 
                 </div>
 
-                <a href="{% url 'jobs:edit_job' job.id %}">
-                    <i class="fa-solid fa-pen"></i>
-                </a>
+            </div>
+
+
+            <!-- Application Pipeline Summary Card -->
+            <div class="recruiter-card">
+
+                <div class="recruiter-card-header" style="margin-bottom: 14px; padding-bottom: 12px;">
+                    <div class="recruiter-card-title-group">
+                        <div class="recruiter-card-icon" style="background: #fffbeb; color: #d97706;">
+                            <i class="fa-solid fa-filter"></i>
+                        </div>
+                        <h2>Hiring Pipeline</h2>
+                    </div>
+                </div>
+
+                <div class="recruiter-pipeline-bars">
+
+                    <div class="recruiter-pipeline-stage">
+                        <div class="pipeline-stage-header">
+                            <span><i class="fa-regular fa-clock" style="color: #d97706;"></i> Pending Review</span>
+                            <span>{{ pending_applications|default:"0" }}</span>
+                        </div>
+                        <div class="pipeline-progress-track">
+                            <div class="pipeline-progress-fill fill-amber"
+                                 data-total="{{ total_applications|default:1 }}"
+                                 data-count="{{ pending_applications|default:0 }}"
+                                 style="width: {% if total_applications %}{% widthratio pending_applications total_applications 100 %}{% else %}0{% endif %}%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="recruiter-pipeline-stage">
+                        <div class="pipeline-stage-header">
+                            <span><i class="fa-solid fa-star" style="color: #059669;"></i> Shortlisted</span>
+                            <span>{{ shortlisted|default:"0" }}</span>
+                        </div>
+                        <div class="pipeline-progress-track">
+                            <div class="pipeline-progress-fill fill-emerald"
+                                 style="width: {% if total_applications %}{% widthratio shortlisted total_applications 100 %}{% else %}0{% endif %}%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="recruiter-pipeline-stage">
+                        <div class="pipeline-stage-header">
+                            <span><i class="fa-solid fa-calendar-check" style="color: #7c3aed;"></i> Interview Stage</span>
+                            <span>{{ interviews|default:"0" }}</span>
+                        </div>
+                        <div class="pipeline-progress-track">
+                            <div class="pipeline-progress-fill fill-purple"
+                                 style="width: {% if total_applications %}{% widthratio interviews total_applications 100 %}{% else %}0{% endif %}%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="recruiter-pipeline-stage">
+                        <div class="pipeline-stage-header">
+                            <span><i class="fa-solid fa-circle-check" style="color: #2563eb;"></i> Selected / Offers</span>
+                            <span>{{ selected_count|default:"0" }}</span>
+                        </div>
+                        <div class="pipeline-progress-track">
+                            <div class="pipeline-progress-fill fill-blue"
+                                 style="width: {% if total_applications %}{% widthratio selected_count total_applications 100 %}{% else %}0{% endif %}%;"></div>
+                        </div>
+                    </div>
+
+                </div>
 
             </div>
 
-            {% empty %}
 
-            <p>No jobs posted yet.</p>
+            <!-- Pro Hiring Tips Card -->
+            <div class="recruiter-card">
 
-            {% endfor %}
+                <div class="recruiter-tip-box">
+                    <strong>
+                        <i class="fa-solid fa-lightbulb"></i> Recruiter Pro Tip
+                    </strong>
+                    <p style="margin: 0;">
+                        Review applicants within <strong>48 hours</strong> of submission. Early candidate responses double acceptance rates and keep top talent engaged!
+                    </p>
+                </div>
+
+            </div>
 
         </div>
 

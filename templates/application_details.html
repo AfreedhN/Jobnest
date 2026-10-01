@@ -1,6 +1,11 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Application Details | JobNest{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/resumes.css' %}?v=1">
+{% endblock %}
 
 {% block content %}
 
@@ -74,6 +79,66 @@
                 {% endif %}
 
             </div>
+
+
+            <!-- Applicant Resume Review Card -->
+            {% if application.resume %}
+            <div class="recruiter-resume-review-card">
+
+                <div class="recruiter-resume-header">
+                    <div class="recruiter-resume-title-group">
+                        <i class="fa-solid fa-file-lines"></i>
+                        <h3>Applicant Resume</h3>
+                    </div>
+                    <span style="font-size: 11px; font-weight: 700; color: #059669; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 3px 9px; border-radius: 20px;">
+                        <i class="fa-solid fa-circle-check"></i> Verified File
+                    </span>
+                </div>
+
+                <div class="recruiter-resume-details-box">
+                    <div class="resume-icon-badge {% if '.pdf' in application.resume.resume_file.name|lower %}file-icon-pdf{% else %}file-icon-doc{% endif %}">
+                        {% if '.pdf' in application.resume.resume_file.name|lower %}
+                            <i class="fa-solid fa-file-pdf"></i>
+                        {% else %}
+                            <i class="fa-solid fa-file-word"></i>
+                        {% endif %}
+                    </div>
+
+                    <div class="recruiter-resume-meta">
+                        <h4 class="recruiter-resume-file-name">
+                            {{ application.resume.resume_file.name|cut:"resumes/" }}
+                        </h4>
+                        <div class="recruiter-resume-sub-info">
+                            <span>
+                                <i class="fa-regular fa-user"></i>
+                                Candidate: <strong>{{ application.applicant.get_full_name|default:application.applicant.username }}</strong>
+                            </span>
+                            <span>
+                                <i class="fa-regular fa-calendar"></i>
+                                Uploaded: {{ application.resume.uploaded_at|date:"d M Y" }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="recruiter-resume-btn-row">
+                    <a href="{{ application.resume.resume_file.url }}"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       class="recruiter-resume-btn btn-view"
+                       title="View resume in a new tab">
+                        <i class="fa-solid fa-eye"></i> View Resume
+                    </a>
+
+                    <a href="{% url 'resumes:download_resume' application.resume.id %}"
+                       class="recruiter-resume-btn btn-download"
+                       title="Download candidate's resume">
+                        <i class="fa-solid fa-download"></i> Download Resume
+                    </a>
+                </div>
+
+            </div>
+            {% endif %}
 
 
             <div class="content-card">

@@ -1,105 +1,238 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}My Resume | JobNest{% endblock %}
+{% block title %}My Resumes | JobNest{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'css/account-pages.css' %}?v=1">
+    <link rel="stylesheet" href="{% static 'css/resumes.css' %}?v=1">
 {% endblock %}
 
 {% block content %}
-<section class="section account-page">
-    <div class="container">
-        <header class="account-page__header">
-            <div>
-                <p class="account-page__eyebrow">Career toolkit</p>
-                <h1>My Resumes</h1>
-                <p>Keep your application documents organized and ready to share.</p>
+
+<section class="resume-section">
+
+<div class="resume-container">
+
+    <!-- Header Card -->
+    <header class="resume-header-card">
+
+        <div class="resume-header-info">
+            <span class="resume-eyebrow">
+                <i class="fa-solid fa-file-shield"></i> Career Toolkit
+            </span>
+            <h1>My Resumes</h1>
+            <p>
+                Keep your application documents organized, set a primary resume for one-click applications, and evaluate ATS compatibility.
+            </p>
+        </div>
+
+        <div class="resume-header-actions">
+            <a href="{% url 'ats_analyzer' %}" class="btn-secondary" style="display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-chart-line" aria-hidden="true"></i>
+                ATS Resume Checker
+            </a>
+            <a href="{% url 'jobs:job_list' %}" class="btn-primary" style="display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                Find Jobs
+            </a>
+        </div>
+
+    </header>
+
+
+    <!-- Quick Upload Resume Box -->
+    <div class="resume-upload-card">
+
+        <h2>
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            Upload New Resume
+        </h2>
+
+        <form method="POST"
+              action="{% url 'resume_upload' %}"
+              enctype="multipart/form-data"
+              id="resumeInlineUploadForm">
+            {% csrf_token %}
+
+            <div class="resume-drop-zone" onclick="document.getElementById('resumeFileInput').click();">
+                <i class="fa-solid fa-cloud-arrow-up resume-drop-icon"></i>
+                <h3>Select a PDF or DOCX file to upload</h3>
+                <p>Supported file formats: PDF, DOC, DOCX · Maximum file size: 5 MB</p>
+
+                <input type="file"
+                       name="resume_file"
+                       id="resumeFileInput"
+                       class="resume-file-input-hidden"
+                       accept=".pdf,.doc,.docx"
+                       required>
+
+                <button type="button" class="resume-choose-btn">
+                    <i class="fa-regular fa-folder-open"></i> Choose File
+                </button>
+
+                <div class="resume-file-status-row" id="resumeFileStatusRow" onclick="event.stopPropagation();" style="display: none;">
+                    <i class="fa-regular fa-file-lines" style="color: #2563eb;"></i>
+                    <span id="selectedFileName">No file selected</span>
+                    <button type="button"
+                            id="removeSelectedFileBtn"
+                            class="resume-remove-file-btn"
+                            title="Remove selected resume"
+                            aria-label="Remove selected resume">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
             </div>
-            <div class="account-page__header-actions">
-                <a href="{% url 'resume_upload' %}" class="btn-primary">
-                    <i class="fa-solid fa-upload" aria-hidden="true"></i>
-                    Upload resume
-                </a>
-                <a href="{% url 'ats_analyzer' %}" class="btn-secondary">
-                    <i class="fa-solid fa-chart-line" aria-hidden="true"></i>
-                    ATS analyzer
-                </a>
+
+            <div class="resume-upload-options">
+                <label class="resume-checkbox-label">
+                    <input type="checkbox" name="is_primary" id="isPrimaryCheckbox">
+                    <span>Set as primary resume for fast 1-click applications</span>
+                </label>
+
+                <button type="submit" class="resume-submit-btn" id="submitResumeBtn">
+                    <i class="fa-solid fa-upload"></i> Upload Resume
+                </button>
             </div>
-        </header>
 
-        <p class="account-page__summary">
-            {{ resumes|length }} resume{{ resumes|length|pluralize }}
-        </p>
+        </form>
 
-        {% if resumes %}
-            <div class="resume-grid">
-                {% for resume in resumes %}
-                    <article class="resume-card">
-                        <div class="resume-card__topline">
-                            <span class="resume-card__icon" aria-hidden="true">
-                                {% if '.pdf' in resume.resume_file.name|lower %}
-                                    <i class="fa-solid fa-file-pdf"></i>
-                                {% else %}
-                                    <i class="fa-solid fa-file-word"></i>
-                                {% endif %}
-                            </span>
-                            <div class="resume-card__info">
-                                <h2 title="{{ resume.resume_file.name|cut:'resumes/' }}">
-                                    {{ resume.resume_file.name|cut:"resumes/" }}
-                                </h2>
-                                <p>
-                                    <i class="fa-regular fa-calendar" aria-hidden="true"></i>
-                                    Uploaded {{ resume.uploaded_at|date:"d M Y" }}
-                                </p>
-                                {% if resume.is_primary %}
-                                    <span class="resume-primary">Primary resume</span>
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <div class="resume-card__actions">
-                            <a class="account-icon-button" href="{{ resume.resume_file.url }}"
-                               target="_blank" rel="noopener noreferrer"
-                               aria-label="View resume" title="View resume">
-                                <i class="fa-solid fa-eye" aria-hidden="true"></i>
-                            </a>
-
-                            {% if not resume.is_primary %}
-                                <form method="post" action="{% url 'set_primary_resume' resume.id %}">
-                                    {% csrf_token %}
-                                    <button class="account-icon-button" type="submit"
-                                            aria-label="Set as primary resume" title="Set as primary">
-                                        <i class="fa-solid fa-star" aria-hidden="true"></i>
-                                    </button>
-                                </form>
-                            {% endif %}
-
-                            <form method="post" action="{% url 'delete_resume' resume.id %}"
-                                  onsubmit="return confirm('Delete this resume?');">
-                                {% csrf_token %}
-                                <button class="account-icon-button account-icon-button--danger"
-                                        type="submit" aria-label="Delete resume" title="Delete resume">
-                                    <i class="fa-solid fa-trash" aria-hidden="true"></i>
-                                </button>
-                            </form>
-                        </div>
-                    </article>
-                {% endfor %}
-            </div>
-        {% else %}
-            <section class="account-empty">
-                <span class="account-empty__icon" aria-hidden="true">
-                    <i class="fa-solid fa-file-arrow-up"></i>
-                </span>
-                <h2>No resumes uploaded</h2>
-                <p>Upload a resume to use it with your job applications.</p>
-                <a href="{% url 'resume_upload' %}" class="btn-primary">
-                    <i class="fa-solid fa-upload" aria-hidden="true"></i>
-                    Upload your first resume
-                </a>
-            </section>
-        {% endif %}
     </div>
+
+
+    <!-- Resumes List & Cards -->
+    <div class="resume-cards-heading">
+        <h2>
+            Your Uploaded Resumes ({{ resumes|length }})
+        </h2>
+    </div>
+
+    {% if resumes %}
+        <div class="resume-cards-grid">
+            {% for resume in resumes %}
+            <article class="resume-card-modern {% if resume.is_primary %}is-primary{% endif %}">
+
+                <div>
+                    <div class="resume-card-top">
+                        <div class="resume-icon-badge {% if '.pdf' in resume.resume_file.name|lower %}file-icon-pdf{% else %}file-icon-doc{% endif %}">
+                            {% if '.pdf' in resume.resume_file.name|lower %}
+                                <i class="fa-solid fa-file-pdf"></i>
+                            {% else %}
+                                <i class="fa-solid fa-file-word"></i>
+                            {% endif %}
+                        </div>
+
+                        <div class="resume-card-info">
+                            <h3 class="resume-title-text" title="{{ resume.title|default:resume.resume_file.name|cut:'resumes/' }}">
+                                {{ resume.title|default:resume.resume_file.name|cut:"resumes/" }}
+                            </h3>
+
+                            <div class="resume-meta-date">
+                                <i class="fa-regular fa-calendar" aria-hidden="true"></i>
+                                Uploaded {{ resume.uploaded_at|date:"d M Y" }}
+                            </div>
+
+                            {% if resume.is_primary %}
+                                <span class="resume-primary-tag">
+                                    <i class="fa-solid fa-star"></i> Primary Resume
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Toolbar -->
+                <div class="resume-card-actions">
+                    <a href="{{ resume.resume_file.url }}"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       class="resume-btn resume-btn-view"
+                       title="View resume in new tab">
+                        <i class="fa-solid fa-eye"></i> View
+                    </a>
+
+                    <a href="{% url 'resumes:download_resume' resume.id %}"
+                       class="resume-btn resume-btn-download"
+                       title="Download resume file">
+                        <i class="fa-solid fa-download"></i> Download
+                    </a>
+
+                    {% if not resume.is_primary %}
+                        <form method="post" action="{% url 'set_primary_resume' resume.id %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit"
+                                    class="resume-btn resume-btn-primary-set"
+                                    title="Set as your primary resume">
+                                <i class="fa-solid fa-star"></i> Set Primary
+                            </button>
+                        </form>
+                    {% endif %}
+
+                    <form method="post"
+                          action="{% url 'delete_resume' resume.id %}"
+                          onsubmit="return confirm('Are you sure you want to delete this resume?');"
+                          style="display: inline; margin-left: auto;">
+                        {% csrf_token %}
+                        <button type="submit"
+                                class="resume-btn resume-btn-delete"
+                                title="Delete resume">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </form>
+                </div>
+
+            </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <!-- Empty State -->
+        <div class="resume-empty-card">
+            <div class="resume-empty-icon">
+                <i class="fa-solid fa-file-arrow-up"></i>
+            </div>
+            <h3>No Resumes Uploaded Yet</h3>
+            <p>
+                Upload your resume above to easily apply for verified jobs on JobNest and get detailed ATS compatibility feedback.
+            </p>
+        </div>
+    {% endif %}
+
+</div>
+
 </section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const fileInput = document.getElementById("resumeFileInput");
+    const statusRow = document.getElementById("resumeFileStatusRow");
+    const fileNameSpan = document.getElementById("selectedFileName");
+    const removeBtn = document.getElementById("removeSelectedFileBtn");
+
+    function clearFile() {
+        if (fileInput) fileInput.value = "";
+        if (fileNameSpan) fileNameSpan.textContent = "No file selected";
+        if (statusRow) statusRow.style.display = "none";
+    }
+
+    if (fileInput) {
+        fileInput.addEventListener("change", function () {
+            if (this.files && this.files.length > 0) {
+                if (fileNameSpan) fileNameSpan.textContent = this.files[0].name;
+                if (statusRow) statusRow.style.display = "inline-flex";
+            } else {
+                clearFile();
+            }
+        });
+    }
+
+    if (removeBtn) {
+        removeBtn.addEventListener("click", function (e) {
+            e.stopPropagation();
+            clearFile();
+        });
+    }
+});
+</script>
 {% endblock %}

@@ -338,8 +338,14 @@ class ApplicationAuthorizationAndManagementTest(TestCase):
 		self.assertEqual(response.status_code, 200)
 		self.assertEqual(response.context["total_jobs"], 1)
 		self.assertEqual(response.context["total_applications"], 1)
+		self.assertEqual(response.context["pending_applications"], 1)
 		self.assertIn(self.app1, response.context["recent_applications"])
 		self.assertNotIn(self.app2, response.context["recent_applications"])
+		self.assertContains(response, "Total Jobs")
+		self.assertContains(response, "Active Jobs")
+		self.assertContains(response, "Total Applications")
+		self.assertContains(response, "Pending Applications")
+		self.assertContains(response, "Recruiter Navigation")
 
 	def test_recruiter_dashboard_redirects_job_seeker(self):
 		self.client.force_login(self.seeker1)

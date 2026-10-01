@@ -4,86 +4,154 @@
 {% block title %}My Applications | JobNest{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'css/account-pages.css' %}?v=1">
+    <link rel="stylesheet" href="{% static 'css/applications.css' %}?v=1">
 {% endblock %}
 
 {% block content %}
-<section class="section account-page">
-    <div class="container">
-        <header class="account-page__header">
-            <div>
-                <p class="account-page__eyebrow">Application tracker</p>
-                <h1>My Applications</h1>
-                <p>Review your submitted applications and their latest status.</p>
-            </div>
-            <a href="{% url 'jobs:job_list' %}" class="btn-secondary">
+
+<section class="application-section">
+
+<div class="application-container">
+
+    <!-- Header Banner -->
+    <header class="app-page-header">
+
+        <div class="app-page-header-info">
+            <span class="app-eyebrow">
+                <i class="fa-solid fa-paper-plane"></i> Candidate Workspace
+            </span>
+            <h1>My Applications</h1>
+            <p>
+                Track your active job applications, view company hiring updates, and manage interview invitations.
+            </p>
+        </div>
+
+        <div class="app-page-header-actions">
+            <a href="{% url 'jobs:job_list' %}" class="btn-primary" style="display: inline-flex; align-items: center; gap: 8px;">
                 <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-                Browse jobs
+                Browse Jobs
             </a>
-        </header>
+            <a href="{% url 'ats_analyzer' %}" class="btn-secondary" style="display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+                ATS Resume Checker
+            </a>
+        </div>
 
-        <p class="account-page__summary">
-            {{ applications|length }} application{{ applications|length|pluralize }}
-        </p>
+    </header>
 
-        {% if applications %}
-            <div class="application-list">
-                {% for application in applications %}
-                    <article class="application-card">
-                        <div class="application-card__brand">
-                            {% if application.job.company.logo %}
-                                <img src="{{ application.job.company.logo.url }}"
-                                     alt="{{ application.job.company.name }} logo">
+
+    <!-- Summary Bar -->
+    <div class="app-summary-bar">
+        <span class="app-count-tag">
+            <i class="fa-solid fa-list-check" style="color: #2563eb;"></i>
+            Total Applications: <strong>{{ applications|length }}</strong>
+        </span>
+
+        <span style="font-size: 13px; color: #64748b;">
+            Updated automatically when employers review your profile
+        </span>
+    </div>
+
+
+    {% if applications %}
+        <div class="seeker-app-list">
+            {% for application in applications %}
+            <article class="seeker-app-card">
+
+                <div class="seeker-app-left">
+                    <div class="seeker-app-logo">
+                        {% if application.job.company.logo %}
+                            <img src="{{ application.job.company.logo.url }}"
+                                 alt="{{ application.job.company.name }} logo">
+                        {% else %}
+                            <span>{{ application.job.company.name|slice:":1"|upper }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="seeker-app-body">
+                        <div class="seeker-app-company">
+                            <i class="fa-solid fa-building" aria-hidden="true"></i>
+                            {% if application.job.company %}
+                                <a href="{% url 'companies:company_detail' application.job.company.id %}" style="color: inherit; text-decoration: none;">
+                                    {{ application.job.company.name }}
+                                </a>
                             {% else %}
-                                <span aria-hidden="true">{{ application.job.company.name|slice:":1"|upper }}</span>
+                                {{ application.job.company.name }}
                             {% endif %}
                         </div>
 
-                        <div class="application-card__main">
-                            <p class="application-card__company">{{ application.job.company.name }}</p>
-                            <h2>
-                                <a href="{% url 'job_details' application.job.id %}">
-                                    {{ application.job.title }}
-                                </a>
-                            </h2>
-                            <div class="application-card__meta">
-                                <span>
-                                    <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
-                                    {{ application.job.location }}
-                                </span>
-                                <span>
-                                    <i class="fa-regular fa-calendar" aria-hidden="true"></i>
-                                    Applied {{ application.applied_at|date:"d M Y" }}
-                                </span>
-                            </div>
-                        </div>
-
-                        <div class="application-card__actions">
-                            <span class="status status-{{ application.status }}">
-                                {{ application.get_status_display }}
-                            </span>
-                            <a href="{% url 'application_details' application.id %}"
-                               class="application-card__view">
-                                View application
-                                <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                        <h2 class="seeker-app-title">
+                            <a href="{% url 'job_details' application.job.id %}">
+                                {{ application.job.title }}
                             </a>
+                        </h2>
+
+                        <div class="seeker-app-meta-row">
+                            <span class="seeker-app-meta-item">
+                                <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+                                {{ application.job.location }}
+                            </span>
+
+                            <span class="seeker-app-meta-item">
+                                <i class="fa-regular fa-clock" aria-hidden="true"></i>
+                                {{ application.job.get_job_type_display|default:application.job.job_type|default:"Full-Time" }}
+                            </span>
+
+                            <span class="seeker-app-meta-item">
+                                <i class="fa-regular fa-calendar-check" aria-hidden="true"></i>
+                                Applied {{ application.applied_at|date:"d M Y" }}
+                            </span>
                         </div>
-                    </article>
-                {% endfor %}
+                    </div>
+                </div>
+
+                <div class="seeker-app-right">
+                    <span class="app-status-badge app-status-{{ application.status }}">
+                        {% if application.status == 'applied' %}
+                            <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+                        {% elif application.status == 'under_review' %}
+                            <i class="fa-solid fa-hourglass-half" aria-hidden="true"></i>
+                        {% elif application.status == 'shortlisted' %}
+                            <i class="fa-solid fa-star" aria-hidden="true"></i>
+                        {% elif application.status == 'interview' %}
+                            <i class="fa-solid fa-calendar-check" aria-hidden="true"></i>
+                        {% elif application.status == 'selected' %}
+                            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                        {% elif application.status == 'rejected' %}
+                            <i class="fa-solid fa-circle-xmark" aria-hidden="true"></i>
+                        {% else %}
+                            <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+                        {% endif %}
+                        {{ application.get_status_display }}
+                    </span>
+
+                    <a href="{% url 'application_details' application.id %}" class="seeker-view-btn">
+                        View Details <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                    </a>
+                </div>
+
+            </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <!-- Empty State -->
+        <div class="app-empty-state">
+            <div class="app-empty-icon">
+                <i class="fa-regular fa-folder-open" aria-hidden="true"></i>
             </div>
-        {% else %}
-            <section class="account-empty">
-                <span class="account-empty__icon" aria-hidden="true">
-                    <i class="fa-regular fa-folder-open"></i>
-                </span>
-                <h2>No applications yet</h2>
-                <p>Your submitted job applications will appear here.</p>
-                <a href="{% url 'jobs:job_list' %}" class="btn-primary">
-                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-                    Find jobs
-                </a>
-            </section>
-        {% endif %}
-    </div>
+            <h3>No Applications Yet</h3>
+            <p>
+                You haven't submitted any job applications yet. Browse verified opportunities matching your skills and start applying today!
+            </p>
+            <a href="{% url 'jobs:job_list' %}" class="btn-primary" style="display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                Find Jobs Now
+            </a>
+        </div>
+    {% endif %}
+
+</div>
+
 </section>
+
 {% endblock %}

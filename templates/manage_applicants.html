@@ -1,168 +1,227 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Manage Applicants | JobNest{% endblock %}
 
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/applications.css' %}?v=1">
+{% endblock %}
+
 {% block content %}
 
-<section class="section">
+<section class="application-section">
 
-<div class="container">
+<div class="application-container">
 
-    <div class="page-header">
+    <!-- Header Banner -->
+    <header class="app-page-header">
 
-        <span class="section-label">
-            RECRUITER
+        <div class="app-page-header-info">
+            <span class="app-eyebrow">
+                <i class="fa-solid fa-briefcase"></i> Employer Pipeline
+            </span>
+            <h1>Manage Applicants</h1>
+            <p>
+                Review candidate submissions, inspect resumes, and advance applicants through your hiring stages.
+            </p>
+        </div>
+
+        <div class="app-page-header-actions">
+            <a href="{% url 'recruiter_dashboard' %}" class="btn-secondary" style="display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-gauge-high" aria-hidden="true"></i>
+                Dashboard
+            </a>
+            <a href="{% url 'post_job' %}" class="btn-primary" style="display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                Post New Job
+            </a>
+        </div>
+
+    </header>
+
+
+    <!-- Summary Bar -->
+    <div class="app-summary-bar">
+        <span class="app-count-tag">
+            <i class="fa-solid fa-users-viewfinder" style="color: #2563eb;"></i>
+            Total Candidates in Pipeline: <strong>{{ applications|length }}</strong>
         </span>
 
-        <h1>Manage Applicants</h1>
-
-        <p>
-            Review candidates and update application status.
-        </p>
-
+        <a href="{% url 'manage_jobs' %}" style="font-size: 13px; color: #2563eb; font-weight: 600; text-decoration: none;">
+            <i class="fa-solid fa-briefcase"></i> View All Posted Jobs &rarr;
+        </a>
     </div>
 
 
-    <div class="content-card table-card">
+    <div class="recruiter-manage-table-card">
 
-        <div class="table-responsive">
+        <div class="recruiter-table-responsive">
 
-            <table>
+            <table class="recruiter-table">
 
                 <thead>
-
                     <tr>
-
                         <th>Candidate</th>
-                        <th>Job</th>
+                        <th>Job Title</th>
                         <th>Resume</th>
                         <th>ATS Score</th>
-                        <th>Applied</th>
+                        <th>Applied Date</th>
                         <th>Status</th>
                         <th>Actions</th>
-
                     </tr>
-
                 </thead>
 
-
                 <tbody>
-
                 {% for application in applications %}
-
                 <tr>
 
+                    <!-- Candidate Name & Email -->
                     <td>
+                        <div class="applicant-cell-profile">
+                            <div class="applicant-avatar-sm">
+                                {{ application.applicant.first_name|first|default:application.applicant.username|first|upper }}
+                            </div>
+                            <div>
+                                <a href="{% url 'application_details' application.id %}" class="applicant-name-link">
+                                    {{ application.applicant.get_full_name|default:application.applicant.username }}
+                                </a>
+                                {% if application.applicant.email %}
+                                    <span class="applicant-email-sub">
+                                        <i class="fa-regular fa-envelope" aria-hidden="true"></i>
+                                        {{ application.applicant.email }}
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
 
-                        <strong>
-                            <a href="{% url 'application_details' application.id %}" style="color: inherit; text-decoration: none;">
-                                {{ application.applicant.get_full_name|default:application.applicant.username }}
+                    <!-- Job Position -->
+                    <td>
+                        <strong class="applicant-job-title">
+                            <a href="{% url 'job_details' application.job.id %}" style="color: inherit; text-decoration: none;">
+                                {{ application.job.title }}
                             </a>
                         </strong>
-
-                        <small style="display: block; color: #64748b;">
-                            {{ application.applicant.email }}
-                        </small>
-
+                        {% if application.job.location %}
+                            <span class="applicant-job-sub">
+                                <i class="fa-solid fa-location-dot" style="font-size: 11px;"></i> {{ application.job.location }}
+                            </span>
+                        {% endif %}
                     </td>
 
-
+                    <!-- Resume -->
                     <td>
-                        {{ application.job.title }}
-                    </td>
-
-
-                    <td>
-
                         {% if application.resume %}
-
-                        <a href="{{ application.resume.resume_file.url }}"
-                           target="_blank">
-                            View Resume
-                        </a>
-
+                            <a href="{{ application.resume.resume_file.url }}"
+                               target="_blank"
+                               class="resume-action-pill"
+                               title="Download or View Resume">
+                                <i class="fa-regular fa-file-pdf"></i>
+                                <span>View Resume</span>
+                            </a>
                         {% else %}
-
-                            No Resume
-
+                            <span class="no-resume-tag">
+                                <i class="fa-solid fa-circle-xmark"></i> No Resume
+                            </span>
                         {% endif %}
-
                     </td>
 
-
+                    <!-- ATS Score -->
                     <td>
-
                         {% if application.ats_score %}
-
-                            <strong>
+                            <span class="ats-score-pill {% if application.ats_score >= 70 %}ats-score-good{% else %}ats-score-medium{% endif %}">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i>
                                 {{ application.ats_score }}/100
-                            </strong>
-
+                            </span>
                         {% else %}
-
-                            —
-
+                            <span style="color: #94a3b8; font-weight: 500;">—</span>
                         {% endif %}
-
                     </td>
 
-
-                    <td>
+                    <!-- Applied Date -->
+                    <td style="white-space: nowrap; color: #64748b;">
+                        <i class="fa-regular fa-calendar"></i>
                         {{ application.applied_at|date:"d M Y" }}
                     </td>
 
-
+                    <!-- Status Selector & Quick Update -->
                     <td>
-
                         <form method="POST"
-                              action="{% url 'update_application_status' application.id %}">
-
+                              action="{% url 'update_application_status' application.id %}"
+                              class="status-select-form">
                             {% csrf_token %}
-
                             <select name="status"
-                                    onchange="this.form.submit()">
-
-                                {% for value,label in application.STATUS_CHOICES %}
-
-                                <option value="{{ value }}"
-                                    {% if application.status == value %}
-                                        selected
-                                    {% endif %}>
-                                    {{ label }}
-                                </option>
-
+                                    onchange="this.form.submit()"
+                                    class="status-dropdown-select"
+                                    title="Change Application Stage">
+                                {% for value, label in application.STATUS_CHOICES %}
+                                    <option value="{{ value }}" {% if application.status == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
                                 {% endfor %}
-
                             </select>
-
                         </form>
-
                     </td>
 
+                    <!-- Action Buttons -->
                     <td>
+                        <div class="recruiter-row-actions">
+                            <a href="{% url 'application_details' application.id %}"
+                               class="recruiter-action-btn btn-view-app"
+                               title="View full application details">
+                                <i class="fa-solid fa-eye" aria-hidden="true"></i> View
+                            </a>
 
-                        <a href="{% url 'application_details' application.id %}"
-                           class="btn-secondary"
-                           style="padding: 6px 12px; font-size: 12px; display: inline-flex; align-items: center; gap: 5px;">
-                            <i class="fa-solid fa-eye" aria-hidden="true"></i> View
-                        </a>
+                            {% if application.status != 'shortlisted' and application.status != 'selected' and application.status != 'rejected' %}
+                                <!-- Quick Shortlist Button -->
+                                <form method="POST" action="{% url 'update_application_status' application.id %}" class="quick-action-form">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="status" value="shortlisted">
+                                    <button type="submit" class="recruiter-action-btn btn-quick-shortlist" title="Quick Shortlist">
+                                        <i class="fa-solid fa-star"></i>
+                                    </button>
+                                </form>
 
+                                <!-- Quick Reject Button -->
+                                <form method="POST" action="{% url 'update_application_status' application.id %}" class="quick-action-form">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="status" value="rejected">
+                                    <button type="submit" class="recruiter-action-btn btn-quick-reject" title="Reject Candidate">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </form>
+                            {% elif application.status == 'shortlisted' or application.status == 'interview' %}
+                                <!-- Quick Offer Button -->
+                                <form method="POST" action="{% url 'update_application_status' application.id %}" class="quick-action-form">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="status" value="selected">
+                                    <button type="submit" class="recruiter-action-btn btn-quick-select" title="Accept / Offer">
+                                        <i class="fa-solid fa-check"></i> Accept
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
                     </td>
 
                 </tr>
-
                 {% empty %}
-
                 <tr>
-
                     <td colspan="7">
-                        No applicants yet.
+                        <div class="app-empty-state" style="border: none; margin: 0; padding: 40px 20px;">
+                            <div class="app-empty-icon" style="background: #f1f5f9; color: #64748b;">
+                                <i class="fa-regular fa-folder-open" aria-hidden="true"></i>
+                            </div>
+                            <h3>No Applicants Found</h3>
+                            <p>
+                                There are no active applicants for your job postings right now. Check back soon as new candidates discover your listings.
+                            </p>
+                            <a href="{% url 'post_job' %}" class="btn-primary" style="display: inline-flex; align-items: center; gap: 8px;">
+                                <i class="fa-solid fa-plus" aria-hidden="true"></i> Post a Job
+                            </a>
+                        </div>
                     </td>
-
                 </tr>
-
                 {% endfor %}
-
                 </tbody>
 
             </table>

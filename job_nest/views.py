@@ -147,8 +147,12 @@ def recruiter_dashboard(request):
 
     recruiter_applications = Application.objects.filter(job__recruiter=request.user)
     total_applications = recruiter_applications.count()
+    pending_applications = recruiter_applications.filter(
+        status__in=[Application.STATUS_APPLIED, Application.STATUS_REVIEW]
+    ).count()
     shortlisted = recruiter_applications.filter(status=Application.STATUS_SHORTLISTED).count()
     interviews = recruiter_applications.filter(status=Application.STATUS_INTERVIEW).count()
+    selected_count = recruiter_applications.filter(status=Application.STATUS_SELECTED).count()
 
     recent_applications = (
         recruiter_applications
@@ -157,15 +161,19 @@ def recruiter_dashboard(request):
     )
 
     jobs = recruiter_jobs.order_by("-created_at")[:6]
+    recruiter_company = recruiter_jobs.first().company if recruiter_jobs.exists() else None
 
     context = {
         "total_jobs": total_jobs,
         "active_jobs": active_jobs,
         "total_applications": total_applications,
+        "pending_applications": pending_applications,
         "shortlisted": shortlisted,
         "interviews": interviews,
+        "selected_count": selected_count,
         "recent_applications": recent_applications,
         "jobs": jobs,
+        "recruiter_company": recruiter_company,
     }
     return render(request, "recruiter_dashboard.html", context)
 

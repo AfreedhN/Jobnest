@@ -7,6 +7,7 @@ from resumes.models import Resume
 
 class Application(models.Model):
 
+    STATUS_PENDING = "pending"
     STATUS_APPLIED = "applied"
     STATUS_REVIEW = "under_review"
     STATUS_SHORTLISTED = "shortlisted"
@@ -15,6 +16,7 @@ class Application(models.Model):
     STATUS_REJECTED = "rejected"
 
     STATUS_CHOICES = [
+        (STATUS_PENDING, "Pending"),
         (STATUS_APPLIED, "Applied"),
         (STATUS_REVIEW, "Under Review"),
         (STATUS_SHORTLISTED, "Shortlisted"),
@@ -50,7 +52,7 @@ class Application(models.Model):
     status = models.CharField(
         max_length=30,
         choices=STATUS_CHOICES,
-        default=STATUS_APPLIED,
+        default=STATUS_PENDING,
         db_index=True
     )
 

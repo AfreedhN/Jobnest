@@ -392,3 +392,37 @@ class ApplicationAuthorizationAndManagementTest(TestCase):
 		self.assertRedirects(response, next_target)
 		self.app1.refresh_from_db()
 		self.assertEqual(self.app1.status, "shortlisted")
+
+	def test_application_initial_status_is_pending_and_shows_resume_on_my_applications(self):
+		self.client.force_login(self.seeker1)
+		app = Application.objects.get(pk=self.app1.pk)
+		self.assertEqual(app.status, Application.STATUS_PENDING)
+
+		history_response = self.client.get(reverse("my_applications"))
+		self.assertEqual(history_response.status_code, 200)
+		self.assertContains(history_response, self.job1.title)
+		self.assertContains(history_response, self.company.name)
+		self.assertContains(history_response, "Pending")
+		self.assertContains(history_response, "Resume:")
+		self.assertContains(history_response, self.resume1.resume_file.url)
+
+	def test_recruiter_status_update_displays_checkmark_and_updates_seeker_view(self):
+		self.client.force_login(self.recruiter1)
+		response = self.client.post(
+			reverse("update_application_status", kwargs={"pk": self.app1.pk}),
+			{"status": Application.STATUS_SELECTED},
+			follow=True,
+		)
+		self.assertEqual(response.status_code, 200)
+		self.assertContains(response, "Application status updated to Selected.")
+		self.assertContains(response, "✓")
+
+		self.app1.refresh_from_db()
+		self.assertEqual(self.app1.status, Application.STATUS_SELECTED)
+
+		# Seeker views my_applications and sees updated status
+		self.client.force_login(self.seeker1)
+		seeker_response = self.client.get(reverse("my_applications"))
+		self.assertEqual(seeker_response.status_code, 200)
+		self.assertContains(seeker_response, "Selected")
+

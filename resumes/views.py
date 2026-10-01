@@ -245,7 +245,8 @@ def delete_resume(request, pk):
 
         messages.success(
             request,
-            "Resume deleted successfully."
+            "Resume deleted successfully.",
+            extra_tags="account-success resume-success resume-deleted-success",
         )
 
         return redirect(

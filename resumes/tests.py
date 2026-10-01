@@ -257,13 +257,13 @@ class ResumeViewTest(TestCase):
             reverse(
                 "resumes:delete_resume",
                 kwargs={"pk": self.resume.pk}
-            )
+            ),
+            follow=True,
         )
 
-        self.assertRedirects(
-            response,
-            reverse("resumes:resume_list")
-        )
+        self.assertContains(response, "Resume deleted successfully.")
+        self.assertContains(response, "account-success-icon")
+        self.assertContains(response, "✓")
         self.assertFalse(
             Resume.objects.filter(pk=self.resume.pk).exists()
         )

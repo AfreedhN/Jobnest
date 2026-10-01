@@ -101,13 +101,24 @@
                                 <i class="fa-regular fa-calendar-check" aria-hidden="true"></i>
                                 Applied {{ application.applied_at|date:"d M Y" }}
                             </span>
+
+                            {% if application.resume %}
+                            <span class="seeker-app-meta-item">
+                                <i class="fa-regular fa-file-pdf" aria-hidden="true"></i>
+                                <a href="{{ application.resume.resume_file.url }}" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: underline;" title="View submitted resume">
+                                    Resume: {{ application.resume.title|default:application.resume.resume_file.name|cut:"resumes/"|truncatechars:24 }}
+                                </a>
+                            </span>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
 
                 <div class="seeker-app-right">
                     <span class="app-status-badge app-status-{{ application.status }}">
-                        {% if application.status == 'applied' %}
+                        {% if application.status == 'pending' %}
+                            <i class="fa-solid fa-hourglass-half" aria-hidden="true"></i>
+                        {% elif application.status == 'applied' %}
                             <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
                         {% elif application.status == 'under_review' %}
                             <i class="fa-solid fa-hourglass-half" aria-hidden="true"></i>

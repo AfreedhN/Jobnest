@@ -166,6 +166,8 @@
 }
 
 /* Applied / Pending */
+.app-status-pending,
+.status-pending,
 .app-status-applied,
 .status-applied {
     background: #eff6ff;

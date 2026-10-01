@@ -84,12 +84,13 @@
 
     {% for message in messages %}
 
-        <div class="message {{ message.tags }}"{% if 'application-submitted' in message.tags or 'account-success' in message.tags %} role="status" aria-live="polite"{% endif %}>
-            {% if 'login-success' in message.tags or 'profile-success' in message.tags or 'register-success' in message.tags or 'account-success' in message.tags %}
+        <div class="message {{ message.tags }}{% if 'Resume deleted successfully' in message|stringformat:'s' and 'account-success' not in message.tags %} account-success resume-deleted-success{% endif %}"{% if 'application-submitted' in message.tags or 'account-success' in message.tags or 'resume-deleted-success' in message.tags or 'Resume deleted successfully' in message|stringformat:'s' %} role="status" aria-live="polite"{% endif %}>
+            {% if 'login-success' in message.tags or 'profile-success' in message.tags or 'register-success' in message.tags or 'account-success' in message.tags or 'resume-deleted-success' in message.tags or 'Resume deleted successfully' in message|stringformat:"s" %}
                 <span class="account-success-icon" aria-hidden="true">✓</span>
                 <strong>{{ message }}</strong>
             {% elif 'application-submitted' in message.tags %}
-                <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                <span class="account-success-icon" aria-hidden="true">✓</span>
+                <i class="fa-solid fa-circle-check" aria-hidden="true" style="display: none;"></i>
                 <div class="message-copy">
                     <strong>Application Submitted Successfully!</strong>
                     <p>Your application has been successfully submitted for this position.</p>
@@ -98,18 +99,18 @@
                 <span>{{ message }}</span>
             {% endif %}
 
-            {% if 'account-success' not in message.tags %}
+            {% if 'account-success' not in message.tags and 'resume-deleted-success' not in message.tags and 'Resume deleted successfully' not in message|stringformat:"s" %}
                 <button type="button" aria-label="Dismiss message" onclick="this.parentElement.remove()">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             {% endif %}
         </div>
 
-        {% if 'account-success' in message.tags %}
+        {% if 'account-success' in message.tags or 'resume-deleted-success' in message.tags or 'Resume deleted successfully' in message|stringformat:"s" %}
             <script>
                 (function () {
                     const toast = document.currentScript.previousElementSibling;
-                    if (!toast || !toast.matches(".message.account-success")) return;
+                    if (!toast || (!toast.matches(".message.account-success") && !toast.matches(".message.resume-deleted-success"))) return;
 
                     toast.dataset.dismissScheduled = "true";
                     window.setTimeout(function () {

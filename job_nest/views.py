@@ -119,7 +119,7 @@ def resume(request):
 def my_applications(request):
     applications = (
         Application.objects.filter(applicant=request.user)
-        .select_related("job__company")
+        .select_related("job__company", "resume")
         .order_by("-applied_at")
     )
     return render(request, 'my_applications.html', {'applications': applications})
@@ -148,7 +148,7 @@ def recruiter_dashboard(request):
     recruiter_applications = Application.objects.filter(job__recruiter=request.user)
     total_applications = recruiter_applications.count()
     pending_applications = recruiter_applications.filter(
-        status__in=[Application.STATUS_APPLIED, Application.STATUS_REVIEW]
+        status__in=[Application.STATUS_PENDING, Application.STATUS_APPLIED, Application.STATUS_REVIEW]
     ).count()
     shortlisted = recruiter_applications.filter(status=Application.STATUS_SHORTLISTED).count()
     interviews = recruiter_applications.filter(status=Application.STATUS_INTERVIEW).count()
@@ -568,7 +568,7 @@ def apply_view(request, job_id=None):
                 resume=resume,
                 cover_letter=request.POST.get('cover_letter', '').strip(),
                 additional_information=request.POST.get('additional_information', '').strip(),
-                status=Application.STATUS_APPLIED,
+                status=Application.STATUS_PENDING,
             )
 
         messages.success(
@@ -691,7 +691,11 @@ def update_application_status(request, pk):
     if status in dict(Application.STATUS_CHOICES):
         application.status = status
         application.save(update_fields=["status", "updated_at"])
-        messages.success(request, f"Application status updated to {application.get_status_display()}.")
+        messages.success(
+            request,
+            f"Application status updated to {application.get_status_display()}.",
+            extra_tags="account-success application-status-success",
+        )
     else:
         messages.error(request, "Invalid application status.")
 

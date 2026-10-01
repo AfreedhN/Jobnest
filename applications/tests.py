@@ -298,12 +298,33 @@ class ApplicationAuthorizationAndManagementTest(TestCase):
 		response = self.client.get(reverse("application_details", kwargs={"pk": self.app1.pk}))
 		self.assertEqual(response.status_code, 403)
 
-	def test_manage_applicants_shows_only_own_jobs_applications(self):
+	def test_manage_applicants_redirects_to_recruiter_dashboard_pipeline(self):
 		self.client.force_login(self.recruiter1)
 		response = self.client.get(reverse("manage_applicants"))
+		self.assertEqual(response.status_code, 302)
+		self.assertIn(reverse("recruiter_dashboard"), response.url)
+
+	def test_recruiter_dashboard_manages_complete_pipeline_and_shows_only_own_jobs(self):
+		self.client.force_login(self.recruiter1)
+		response = self.client.get(reverse("recruiter_dashboard"))
 		self.assertEqual(response.status_code, 200)
-		self.assertIn(self.app1, response.context["applications"])
-		self.assertNotIn(self.app2, response.context["applications"])
+		self.assertIn(self.app1, response.context["pipeline_applications"])
+		self.assertNotIn(self.app2, response.context["pipeline_applications"])
+		self.assertIn(self.app1, response.context["pending_applications_list"])
+		self.assertNotIn(self.app2, response.context["pending_applications_list"])
+		self.assertContains(response, "Pending Applications")
+		self.assertContains(response, "Candidate Pipeline &amp; Review Candidates")
+		self.assertContains(response, "Resume")
+
+	def test_recruiter_cannot_access_my_applications_and_redirects_to_dashboard(self):
+		self.client.force_login(self.recruiter1)
+		response = self.client.get(reverse("my_applications"))
+		self.assertRedirects(response, reverse("recruiter_dashboard"))
+
+	def test_seeker_can_access_my_applications_normally(self):
+		self.client.force_login(self.seeker1)
+		response = self.client.get(reverse("my_applications"))
+		self.assertEqual(response.status_code, 200)
 
 	def test_update_application_status_requires_post(self):
 		self.client.force_login(self.recruiter1)

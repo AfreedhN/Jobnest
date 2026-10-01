@@ -43,7 +43,9 @@
                 <a href="{% url 'jobs:job_list' %}">Jobs</a>
                 <a href="{% url 'companies:company_list' %}">Companies</a>
                 <a href="{% url 'resume' %}">Resume</a>
-                <a href="{% url 'my_applications' %}">Applications</a>
+                {% if user.profile.account_type != 'recruiter' %}
+                    <a href="{% url 'my_applications' %}">Applications</a>
+                {% endif %}
 
                 {% if user.profile.account_type == 'recruiter' %}
                     <a href="{% url 'recruiter_dashboard' %}">Dashboard</a>

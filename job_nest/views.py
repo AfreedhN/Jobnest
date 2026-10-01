@@ -11,6 +11,7 @@ from django.views.decorators.http import require_POST
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 
 from adm.models import Profile
@@ -117,6 +118,14 @@ def resume(request):
 
 @login_required
 def my_applications(request):
+    is_recruiter = (
+        Profile.objects.filter(user=request.user, account_type="recruiter").exists()
+        and not request.user.is_superuser
+    )
+    if is_recruiter:
+        messages.info(request, "Recruiters manage candidate applications directly from the Recruiter Dashboard.")
+        return redirect("recruiter_dashboard")
+
     applications = (
         Application.objects.filter(applicant=request.user)
         .select_related("job__company", "resume")
@@ -153,14 +162,37 @@ def recruiter_dashboard(request):
     shortlisted = recruiter_applications.filter(status=Application.STATUS_SHORTLISTED).count()
     interviews = recruiter_applications.filter(status=Application.STATUS_INTERVIEW).count()
     selected_count = recruiter_applications.filter(status=Application.STATUS_SELECTED).count()
+    rejected_count = recruiter_applications.filter(status=Application.STATUS_REJECTED).count()
 
+    # 1. Recent Applications (latest 8 for overview)
     recent_applications = (
         recruiter_applications
         .select_related("applicant", "job", "resume")
         .order_by("-applied_at")[:8]
     )
 
+    # 2. Pending Applications (dedicated pending review queue)
+    pending_applications_list = (
+        recruiter_applications
+        .filter(status__in=[Application.STATUS_PENDING, Application.STATUS_APPLIED, Application.STATUS_REVIEW])
+        .select_related("applicant", "job__company", "resume")
+        .order_by("-applied_at")
+    )
+
+    # 3. Candidate Pipeline & Review Candidates (complete workflow with filtering)
+    job_filter = request.GET.get("job")
+    status_filter = request.GET.get("status")
+
+    pipeline_queryset = recruiter_applications.select_related("applicant", "job__company", "resume")
+    if job_filter:
+        pipeline_queryset = pipeline_queryset.filter(job_id=job_filter)
+    if status_filter and status_filter in dict(Application.STATUS_CHOICES):
+        pipeline_queryset = pipeline_queryset.filter(status=status_filter)
+
+    pipeline_applications = pipeline_queryset.order_by("-applied_at")
+
     jobs = recruiter_jobs.order_by("-created_at")[:6]
+    all_recruiter_jobs = recruiter_jobs.order_by("-created_at")
     recruiter_company = recruiter_jobs.first().company if recruiter_jobs.exists() else None
 
     context = {
@@ -171,9 +203,16 @@ def recruiter_dashboard(request):
         "shortlisted": shortlisted,
         "interviews": interviews,
         "selected_count": selected_count,
+        "rejected_count": rejected_count,
         "recent_applications": recent_applications,
+        "pending_applications_list": pending_applications_list,
+        "pipeline_applications": pipeline_applications,
+        "status_choices": Application.STATUS_CHOICES,
         "jobs": jobs,
+        "all_recruiter_jobs": all_recruiter_jobs,
         "recruiter_company": recruiter_company,
+        "selected_job_filter": job_filter,
+        "selected_status_filter": status_filter,
     }
     return render(request, "recruiter_dashboard.html", context)
 
@@ -633,12 +672,15 @@ def manage_applicants(request):
         messages.error(request, "Only recruiters can manage applicants.")
         return redirect("home")
 
-    applications = (
-        Application.objects.filter(job__recruiter=request.user)
-        .select_related("applicant", "job__company", "resume")
-        .order_by("-applied_at")
-    )
-    return render(request, "manage_applicants.html", {"applications": applications})
+    job_id = request.GET.get("job")
+    status_param = request.GET.get("status")
+    params = []
+    if job_id:
+        params.append(f"job={job_id}")
+    if status_param:
+        params.append(f"status={status_param}")
+    query = f"?{'&'.join(params)}" if params else ""
+    return redirect(f"{reverse('recruiter_dashboard')}{query}#candidate-pipeline")
 
 
 @login_required
@@ -706,7 +748,7 @@ def update_application_status(request, pk):
         require_https=request.is_secure()
     ):
         return redirect(next_url)
-    return redirect("manage_applicants")
+    return redirect(f"{reverse('recruiter_dashboard')}#candidate-pipeline")
 
 
 @login_required

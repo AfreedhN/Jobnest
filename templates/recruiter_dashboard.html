@@ -4,7 +4,8 @@
 {% block title %}Recruiter Dashboard | JobNest{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'css/recruiter.css' %}?v=1">
+    <link rel="stylesheet" href="{% static 'css/recruiter.css' %}?v=2">
+    <link rel="stylesheet" href="{% static 'css/applications.css' %}?v=2">
 {% endblock %}
 
 {% block content %}
@@ -49,7 +50,7 @@
                 <i class="fa-solid fa-plus"></i> Post New Job
             </a>
 
-            <a href="{% url 'manage_applicants' %}" class="recruiter-btn recruiter-btn-secondary">
+            <a href="#candidate-pipeline" class="recruiter-btn recruiter-btn-secondary">
                 <i class="fa-solid fa-users"></i> Review Candidates
             </a>
 
@@ -123,9 +124,9 @@
 
             <div class="recruiter-stat-footer">
                 <span>Across all postings</span>
-                <span style="font-weight: 600; color: #7c3aed;">
-                    {{ shortlisted|default:"0" }} Shortlisted
-                </span>
+                <a href="#candidate-pipeline" class="recruiter-stat-tag" style="color: #7c3aed;">
+                    Pipeline <i class="fa-solid fa-arrow-down"></i>
+                </a>
             </div>
 
         </div>
@@ -148,8 +149,8 @@
                 <span class="recruiter-stat-tag tag-pending">
                     <span class="dot"></span> Awaiting Review
                 </span>
-                <a href="{% url 'manage_applicants' %}" class="recruiter-stat-tag" style="color: #d97706;">
-                    Review <i class="fa-solid fa-arrow-right"></i>
+                <a href="#pending-applications" class="recruiter-stat-tag" style="color: #d97706;">
+                    Review <i class="fa-solid fa-arrow-down"></i>
                 </a>
             </div>
 
@@ -161,11 +162,11 @@
     <!-- Main 2-Column Grid (Workspace & Control Sidebar) -->
     <div class="recruiter-dashboard-grid">
 
-        <!-- Main Column (Recent Applications & Your Jobs) -->
+        <!-- Main Column (Recent Applications, Pending Applications, Candidate Pipeline, Your Jobs) -->
         <div class="recruiter-main-col">
 
-            <!-- Recent Applications Card -->
-            <div class="recruiter-card">
+            <!-- 1. Recent Applications Card -->
+            <div class="recruiter-card" id="recent-applications">
 
                 <div class="recruiter-card-header">
                     <div class="recruiter-card-title-group">
@@ -176,7 +177,7 @@
                         <span class="recruiter-count-badge">{{ recent_applications|length }}</span>
                     </div>
 
-                    <a href="{% url 'manage_applicants' %}" class="recruiter-view-all-link">
+                    <a href="#candidate-pipeline" class="recruiter-view-all-link">
                         View All Pipeline <i class="fa-solid fa-chevron-right"></i>
                     </a>
                 </div>
@@ -192,7 +193,9 @@
 
                             <div class="recruiter-applicant-meta">
                                 <h4 class="recruiter-applicant-name">
-                                    {{ application.applicant.get_full_name|default:application.applicant.username }}
+                                    <a href="{% url 'application_details' application.id %}" style="color: inherit; text-decoration: none;">
+                                        {{ application.applicant.get_full_name|default:application.applicant.username }}
+                                    </a>
                                 </h4>
                                 <p class="recruiter-applicant-sub">
                                     Applied for <span class="job-name">{{ application.job.title }}</span>
@@ -201,6 +204,12 @@
                         </div>
 
                         <div class="recruiter-applicant-right">
+                            {% if application.resume %}
+                                <a href="{{ application.resume.resume_file.url }}" target="_blank" rel="noopener noreferrer" class="recruiter-resume-pill-sm" title="View candidate resume">
+                                    <i class="fa-regular fa-file-pdf"></i> Resume
+                                </a>
+                            {% endif %}
+
                             <span class="recruiter-date-pill">
                                 <i class="fa-regular fa-calendar"></i> {{ application.applied_at|date:"M d, Y" }}
                             </span>
@@ -231,7 +240,339 @@
             </div>
 
 
-            <!-- Your Jobs Card -->
+            <!-- 2. Pending Applications Card -->
+            <div class="recruiter-card" id="pending-applications">
+
+                <div class="recruiter-card-header">
+                    <div class="recruiter-card-title-group">
+                        <div class="recruiter-card-icon" style="background: #fffbeb; color: #d97706;">
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                        </div>
+                        <h2>Pending Applications</h2>
+                        <span class="recruiter-count-badge" style="background: #fef3c7; color: #92400e;">{{ pending_applications|default:"0" }}</span>
+                    </div>
+
+                    <a href="#candidate-pipeline" class="recruiter-view-all-link">
+                        Pipeline View <i class="fa-solid fa-chevron-right"></i>
+                    </a>
+                </div>
+
+                <div class="recruiter-applicant-list">
+                    {% for application in pending_applications_list %}
+                    <div class="recruiter-applicant-item">
+
+                        <div class="recruiter-applicant-profile">
+                            <div class="recruiter-avatar recruiter-avatar-alt-2">
+                                {{ application.applicant.first_name|first|default:application.applicant.username|first|upper }}
+                            </div>
+
+                            <div class="recruiter-applicant-meta">
+                                <h4 class="recruiter-applicant-name">
+                                    <a href="{% url 'application_details' application.id %}" style="color: inherit; text-decoration: none;">
+                                        {{ application.applicant.get_full_name|default:application.applicant.username }}
+                                    </a>
+                                </h4>
+                                <p class="recruiter-applicant-sub">
+                                    Applied for <span class="job-name">{{ application.job.title }}</span>
+                                    {% if application.applicant.email %}
+                                        &bull; <span style="color: #64748b;">{{ application.applicant.email }}</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="recruiter-applicant-right">
+                            {% if application.resume %}
+                                <a href="{{ application.resume.resume_file.url }}" target="_blank" rel="noopener noreferrer" class="recruiter-resume-pill-sm" title="View candidate resume">
+                                    <i class="fa-regular fa-file-pdf"></i> Resume
+                                </a>
+                            {% else %}
+                                <span class="no-resume-tag-sm"><i class="fa-solid fa-xmark"></i> No Resume</span>
+                            {% endif %}
+
+                            <span class="recruiter-date-pill">
+                                <i class="fa-regular fa-calendar"></i> {{ application.applied_at|date:"M d, Y" }}
+                            </span>
+
+                            <div class="recruiter-quick-actions-row">
+                                <form method="POST" action="{% url 'update_application_status' application.id %}" style="margin: 0;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="next" value="{{ request.get_full_path }}#pending-applications">
+                                    <input type="hidden" name="status" value="shortlisted">
+                                    <button type="submit" class="recruiter-action-btn btn-quick-shortlist" title="Quick Shortlist" style="padding: 6px 10px; font-size: 11px;">
+                                        <i class="fa-solid fa-star"></i> Shortlist
+                                    </button>
+                                </form>
+
+                                <form method="POST" action="{% url 'update_application_status' application.id %}" style="margin: 0;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="next" value="{{ request.get_full_path }}#pending-applications">
+                                    <input type="hidden" name="status" value="rejected">
+                                    <button type="submit" class="recruiter-action-btn btn-quick-reject" title="Reject Candidate" style="padding: 6px 10px; font-size: 11px;">
+                                        <i class="fa-solid fa-xmark"></i> Reject
+                                    </button>
+                                </form>
+
+                                <a href="{% url 'application_details' application.id %}" class="recruiter-btn-sm recruiter-btn-review" title="Review candidate details">
+                                    Review <i class="fa-solid fa-arrow-right"></i>
+                                </a>
+                            </div>
+                        </div>
+
+                    </div>
+                    {% empty %}
+                    <div class="recruiter-empty-state" style="padding: 32px 20px;">
+                        <i class="fa-regular fa-circle-check" style="color: #059669; font-size: 32px; margin-bottom: 10px;"></i>
+                        <h3 style="font-size: 16px; margin-bottom: 4px;">All Caught Up!</h3>
+                        <p style="font-size: 13px; margin: 0;">There are currently no pending applications awaiting initial review.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+
+            </div>
+
+
+            <!-- 3. Candidate Pipeline & Review Candidates Section -->
+            <div class="recruiter-card" id="candidate-pipeline">
+
+                <div class="recruiter-card-header" id="review-candidates">
+                    <div class="recruiter-card-title-group">
+                        <div class="recruiter-card-icon" style="background: #f5f3ff; color: #7c3aed;">
+                            <i class="fa-solid fa-users-viewfinder"></i>
+                        </div>
+                        <div>
+                            <h2>Candidate Pipeline &amp; Review Candidates</h2>
+                            <p style="font-size: 13px; color: #64748b; margin: 2px 0 0 0;">
+                                Review candidate submissions, inspect resumes, and update candidate hiring stages directly.
+                            </p>
+                        </div>
+                    </div>
+
+                    <span class="recruiter-count-badge" style="background: #f3e8ff; color: #6b21a8;">
+                        {{ pipeline_applications|length }} Candidate{{ pipeline_applications|length|pluralize }}
+                    </span>
+                </div>
+
+                <!-- Pipeline Filter Bar -->
+                <div class="recruiter-pipeline-filter-bar">
+                    <div class="recruiter-filter-tabs">
+                        <a href="{% url 'recruiter_dashboard' %}{% if selected_job_filter %}?job={{ selected_job_filter }}{% endif %}#candidate-pipeline"
+                           class="recruiter-filter-pill {% if not selected_status_filter %}active{% endif %}">
+                            All <span class="pill-count">{{ total_applications|default:"0" }}</span>
+                        </a>
+                        <a href="{% url 'recruiter_dashboard' %}?status=pending{% if selected_job_filter %}&job={{ selected_job_filter }}{% endif %}#candidate-pipeline"
+                           class="recruiter-filter-pill {% if selected_status_filter == 'pending' %}active{% endif %}">
+                            Pending <span class="pill-count">{{ pending_applications|default:"0" }}</span>
+                        </a>
+                        <a href="{% url 'recruiter_dashboard' %}?status=shortlisted{% if selected_job_filter %}&job={{ selected_job_filter }}{% endif %}#candidate-pipeline"
+                           class="recruiter-filter-pill {% if selected_status_filter == 'shortlisted' %}active{% endif %}">
+                            Shortlisted <span class="pill-count">{{ shortlisted|default:"0" }}</span>
+                        </a>
+                        <a href="{% url 'recruiter_dashboard' %}?status=interview{% if selected_job_filter %}&job={{ selected_job_filter }}{% endif %}#candidate-pipeline"
+                           class="recruiter-filter-pill {% if selected_status_filter == 'interview' %}active{% endif %}">
+                            Interview <span class="pill-count">{{ interviews|default:"0" }}</span>
+                        </a>
+                        <a href="{% url 'recruiter_dashboard' %}?status=selected{% if selected_job_filter %}&job={{ selected_job_filter }}{% endif %}#candidate-pipeline"
+                           class="recruiter-filter-pill {% if selected_status_filter == 'selected' %}active{% endif %}">
+                            Selected <span class="pill-count">{{ selected_count|default:"0" }}</span>
+                        </a>
+                        <a href="{% url 'recruiter_dashboard' %}?status=rejected{% if selected_job_filter %}&job={{ selected_job_filter }}{% endif %}#candidate-pipeline"
+                           class="recruiter-filter-pill {% if selected_status_filter == 'rejected' %}active{% endif %}">
+                            Rejected <span class="pill-count">{{ rejected_count|default:"0" }}</span>
+                        </a>
+                    </div>
+
+                    {% if all_recruiter_jobs %}
+                    <form method="GET" action="{% url 'recruiter_dashboard' %}#candidate-pipeline" style="margin: 0;">
+                        {% if selected_status_filter %}
+                            <input type="hidden" name="status" value="{{ selected_status_filter }}">
+                        {% endif %}
+                        <select name="job" onchange="this.form.submit()" class="recruiter-job-filter-select" title="Filter by Job Posting">
+                            <option value="">All Job Postings ({{ total_jobs }})</option>
+                            {% for j in all_recruiter_jobs %}
+                                <option value="{{ j.id }}" {% if selected_job_filter == j.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ j.title }} ({{ j.applications.count }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                    {% endif %}
+                </div>
+
+                <!-- Pipeline Table -->
+                <div class="recruiter-manage-table-card" style="margin-bottom: 0;">
+                    <div class="recruiter-table-responsive">
+                        <table class="recruiter-table">
+                            <thead>
+                                <tr>
+                                    <th>Candidate</th>
+                                    <th>Job Title</th>
+                                    <th>Resume</th>
+                                    <th>ATS Score</th>
+                                    <th>Applied Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% for application in pipeline_applications %}
+                            <tr>
+                                <!-- Candidate Profile -->
+                                <td>
+                                    <div class="applicant-cell-profile">
+                                        <div class="applicant-avatar-sm">
+                                            {{ application.applicant.first_name|first|default:application.applicant.username|first|upper }}
+                                        </div>
+                                        <div>
+                                            <a href="{% url 'application_details' application.id %}" class="applicant-name-link">
+                                                {{ application.applicant.get_full_name|default:application.applicant.username }}
+                                            </a>
+                                            {% if application.applicant.email %}
+                                                <span class="applicant-email-sub">
+                                                    <i class="fa-regular fa-envelope"></i> {{ application.applicant.email }}
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <!-- Job Position -->
+                                <td>
+                                    <strong class="applicant-job-title">
+                                        <a href="{% url 'job_details' application.job.id %}" style="color: inherit; text-decoration: none;">
+                                            {{ application.job.title }}
+                                        </a>
+                                    </strong>
+                                    {% if application.job.location %}
+                                        <span class="applicant-job-sub">
+                                            <i class="fa-solid fa-location-dot" style="font-size: 11px;"></i> {{ application.job.location }}
+                                        </span>
+                                    {% endif %}
+                                </td>
+
+                                <!-- Resume -->
+                                <td>
+                                    {% if application.resume %}
+                                        <a href="{{ application.resume.resume_file.url }}"
+                                           target="_blank"
+                                           rel="noopener noreferrer"
+                                           class="resume-action-pill"
+                                           title="Download or View Resume">
+                                            <i class="fa-regular fa-file-pdf"></i>
+                                            <span>View Resume</span>
+                                        </a>
+                                    {% else %}
+                                        <span class="no-resume-tag">
+                                            <i class="fa-solid fa-circle-xmark"></i> No Resume
+                                        </span>
+                                    {% endif %}
+                                </td>
+
+                                <!-- ATS Score -->
+                                <td>
+                                    {% if application.ats_score %}
+                                        <span class="ats-score-pill {% if application.ats_score >= 70 %}ats-score-good{% else %}ats-score-medium{% endif %}">
+                                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                                            {{ application.ats_score }}/100
+                                        </span>
+                                    {% else %}
+                                        <span style="color: #94a3b8; font-weight: 500;">—</span>
+                                    {% endif %}
+                                </td>
+
+                                <!-- Applied Date -->
+                                <td style="white-space: nowrap; color: #64748b;">
+                                    <i class="fa-regular fa-calendar"></i>
+                                    {{ application.applied_at|date:"d M Y" }}
+                                </td>
+
+                                <!-- Status Selector & Quick Update -->
+                                <td>
+                                    <form method="POST"
+                                          action="{% url 'update_application_status' application.id %}"
+                                          class="status-select-form">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="next" value="{{ request.get_full_path }}#candidate-pipeline">
+                                        <select name="status"
+                                                onchange="this.form.submit()"
+                                                class="status-dropdown-select"
+                                                title="Change Application Stage">
+                                            {% for value, label in status_choices %}
+                                                <option value="{{ value }}" {% if application.status == value %}selected{% endif %}>
+                                                    {{ label }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </form>
+                                </td>
+
+                                <!-- Action Buttons -->
+                                <td>
+                                    <div class="recruiter-row-actions">
+                                        <a href="{% url 'application_details' application.id %}"
+                                           class="recruiter-action-btn btn-view-app"
+                                           title="View full application details">
+                                            <i class="fa-solid fa-eye" aria-hidden="true"></i> View
+                                        </a>
+
+                                        {% if application.status != 'shortlisted' and application.status != 'selected' and application.status != 'rejected' %}
+                                            <form method="POST" action="{% url 'update_application_status' application.id %}" class="quick-action-form">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="next" value="{{ request.get_full_path }}#candidate-pipeline">
+                                                <input type="hidden" name="status" value="shortlisted">
+                                                <button type="submit" class="recruiter-action-btn btn-quick-shortlist" title="Quick Shortlist">
+                                                    <i class="fa-solid fa-star"></i>
+                                                </button>
+                                            </form>
+
+                                            <form method="POST" action="{% url 'update_application_status' application.id %}" class="quick-action-form">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="next" value="{{ request.get_full_path }}#candidate-pipeline">
+                                                <input type="hidden" name="status" value="rejected">
+                                                <button type="submit" class="recruiter-action-btn btn-quick-reject" title="Reject Candidate">
+                                                    <i class="fa-solid fa-xmark"></i>
+                                                </button>
+                                            </form>
+                                        {% elif application.status == 'shortlisted' or application.status == 'interview' %}
+                                            <form method="POST" action="{% url 'update_application_status' application.id %}" class="quick-action-form">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="next" value="{{ request.get_full_path }}#candidate-pipeline">
+                                                <input type="hidden" name="status" value="selected">
+                                                <button type="submit" class="recruiter-action-btn btn-quick-select" title="Accept / Offer">
+                                                    <i class="fa-solid fa-check"></i> Accept
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7">
+                                    <div class="app-empty-state" style="border: none; margin: 0; padding: 40px 20px;">
+                                        <div class="app-empty-icon" style="background: #f1f5f9; color: #64748b;">
+                                            <i class="fa-regular fa-folder-open" aria-hidden="true"></i>
+                                        </div>
+                                        <h3>No Candidates in Pipeline</h3>
+                                        <p>
+                                            There are no candidate applications matching your current filter. Post a job or share listings to start attracting talent.
+                                        </p>
+                                        <a href="{% url 'post_job' %}" class="btn-primary" style="display: inline-flex; align-items: center; gap: 8px;">
+                                            <i class="fa-solid fa-plus"></i> Post a Job
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+
+            <!-- 4. Your Jobs Card -->
             <div class="recruiter-card">
 
                 <div class="recruiter-card-header">
@@ -283,7 +624,7 @@
                         </div>
 
                         <div class="recruiter-job-right">
-                            <a href="{% url 'manage_applicants' %}?job={{ job.id }}" class="recruiter-app-count-pill" title="View candidates for this job">
+                            <a href="{% url 'recruiter_dashboard' %}?job={{ job.id }}#candidate-pipeline" class="recruiter-app-count-pill" title="View candidates for this job">
                                 <i class="fa-solid fa-users"></i>
                                 <span>{{ job.applications.count }} applicants</span>
                             </a>
@@ -352,7 +693,7 @@
                         <span class="recruiter-nav-badge">{{ total_jobs|default:"0" }}</span>
                     </a>
 
-                    <a href="{% url 'manage_applicants' %}" class="recruiter-nav-item">
+                    <a href="#candidate-pipeline" class="recruiter-nav-item">
                         <div class="recruiter-nav-item-left">
                             <i class="fa-solid fa-users-viewfinder"></i>
                             <span>Candidate Pipeline</span>

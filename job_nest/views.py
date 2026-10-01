@@ -418,6 +418,8 @@ def ats_analyzer(request):
                         custom_job_title=custom_job_title,
                         custom_job_description=custom_job_description,
                     )
+                    valid_report_fields = {f.name for f in ATSReport._meta.get_fields()}
+                    report_data = {k: v for k, v in analysis.items() if k in valid_report_fields}
                     with transaction.atomic():
                         resume = Resume.objects.create(
                             user=request.user,
@@ -433,7 +435,7 @@ def ats_analyzer(request):
                             job_title_input=custom_job_title or (job.title if job else "General ATS Analysis"),
                             job_company_name=job.company.name if (job and getattr(job, "company", None)) else "",
                             job_description_input=custom_job_description if not job else "",
-                            **analysis,
+                            **report_data,
                         )
                     return render(request, 'ats_result.html', {'report': report})
         elif not resume:
@@ -450,6 +452,8 @@ def ats_analyzer(request):
                     custom_job_title=custom_job_title,
                     custom_job_description=custom_job_description,
                 )
+                valid_report_fields = {f.name for f in ATSReport._meta.get_fields()}
+                report_data = {k: v for k, v in analysis.items() if k in valid_report_fields}
                 report = ATSReport.objects.create(
                     user=request.user,
                     resume=resume,
@@ -458,7 +462,7 @@ def ats_analyzer(request):
                     job_title_input=custom_job_title or (job.title if job else "General ATS Analysis"),
                     job_company_name=job.company.name if (job and getattr(job, "company", None)) else "",
                     job_description_input=custom_job_description if not job else "",
-                    **analysis,
+                    **report_data,
                 )
                 return render(request, 'ats_result.html', {'report': report})
 

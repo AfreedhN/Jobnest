@@ -354,3 +354,133 @@ class ATSAnalyzerViewTest(TestCase):
 		self.assertIn("Kubernetes", report.matched_skills)
 		self.assertContains(response, "Site Reliability Engineer")
 
+	def test_transparent_nine_category_scoring_and_overall_score(self):
+		resume_text = (
+			"Jane Doe\n"
+			"jane.doe@example.com | +1 555 123 4567 | linkedin.com/in/janedoe | github.com/janedoe\n"
+			"Professional Summary\n"
+			"Senior Python developer with experience designing cloud microservices.\n"
+			"Technical Skills\n"
+			"Python, Django, SQL, Docker, PostgreSQL\n"
+			"Professional Experience\n"
+			"Engineered RESTful APIs with Python and Django, improving throughput by 35%.\n"
+			"Developed automated data pipelines handling 50k transactions daily.\n"
+			"Projects\n"
+			"JobNest Portal: Designed full-stack platform using Django and PostgreSQL.\n"
+			"Education\n"
+			"Bachelor of Science in Computer Science, State University, 2021."
+		)
+		analysis = analyze_resume_text(resume_text, self.job)
+
+		self.assertIn("category_scores", analysis)
+		cat_scores = analysis["category_scores"]
+		expected_keys = {
+			"contact_info", "professional_summary", "technical_skills",
+			"experience", "projects", "education", "keywords", "grammar", "formatting",
+		}
+		self.assertEqual(set(cat_scores.keys()), expected_keys)
+
+		# Sum of maximum points across all 9 categories must equal 100
+		total_max = sum(cat["max"] for cat in cat_scores.values())
+		self.assertEqual(total_max, 100)
+
+		# Overall score must equal the sum of earned category points
+		earned_sum = sum(cat["score"] for cat in cat_scores.values())
+		self.assertEqual(analysis["overall_score"], earned_sum)
+
+		# Check explanations exist for each category
+		for key, cat in cat_scores.items():
+			self.assertIn("explanation", cat)
+			self.assertGreater(len(cat["explanation"]), 5)
+			self.assertIn("score", cat)
+			self.assertIn("max", cat)
+			self.assertIn("label", cat)
+
+	def test_good_lines_vs_needs_improvement_detection(self):
+		resume_text = (
+			"Jane Doe\n"
+			"jane@example.com | 555-0100\n"
+			"Professional Summary\n"
+			"I am a hardworking software engineer skilled in python and django.\n"
+			"Work Experience\n"
+			"Responsible for building REST APIs.\n"
+			"Engineered scalable backend services with Django, improving query response time by 40%.\n"
+			"Education\n"
+			"Bachelor's degree in Computer Science, 2022.\n"
+			"Technical Skills\n"
+			"Python, Django"
+		)
+		analysis = analyze_resume_text(resume_text, self.job)
+
+		self.assertIn("good_lines", analysis)
+		self.assertIn("line_improvements", analysis)
+
+		# Strong bullet point should be recognized as a good line
+		good_lines = analysis["good_lines"]
+		self.assertGreater(len(good_lines), 0)
+		good_line_texts = [g["current_line"] for g in good_lines]
+		self.assertTrue(any("Engineered scalable backend services" in txt for txt in good_line_texts))
+
+		# Problematic line should be flagged in line_improvements
+		bad_lines = analysis["line_improvements"]
+		bad_line_texts = [b["current_line"] for b in bad_lines]
+		self.assertTrue(any("Responsible for" in txt for txt in bad_line_texts or "hardworking" in txt))
+
+	def test_jd_match_deep_comparison_structure(self):
+		resume_text = (
+			"Jane Doe\n"
+			"jane@example.com | 555-0100 | linkedin.com/in/jane | github.com/jane\n"
+			"Professional Summary\n"
+			"Python developer specializing in web applications.\n"
+			"Technical Skills\n"
+			"Python, Django\n"
+			"Experience\n"
+			"Engineered Python APIs with Django framework.\n"
+			"Education\n"
+			"Bachelor's degree in Computer Science, 2020."
+		)
+		analysis = analyze_resume_text(resume_text, self.job)
+
+		self.assertIn("jd_match_analysis", analysis)
+		jd_match = analysis["jd_match_analysis"]
+		self.assertEqual(jd_match["target_title"], self.job.title)
+		self.assertEqual(jd_match["matching_skills"], ["Python", "Django"])
+		self.assertEqual(jd_match["missing_skills"], ["SQL"])
+		self.assertIn("python", jd_match["matching_keywords"])
+		self.assertIn("kubernetes", jd_match["missing_keywords"])
+		self.assertIn("relevant_experience", jd_match)
+		self.assertIn("areas_for_improvement", jd_match)
+
+	def test_contact_information_scoring_rules(self):
+		# Case 1: Incomplete contact info (missing LinkedIn & GitHub)
+		incomplete_resume = (
+			"Jane Doe\n"
+			"jane@example.com | 555-123-4567\n"
+			"Professional Summary\n"
+			"Python developer.\n"
+			"Technical Skills\n"
+			"Python\n"
+			"Education\n"
+			"Degree in Engineering."
+		)
+		analysis1 = analyze_resume_text(incomplete_resume, self.job)
+		contact1 = analysis1["category_scores"]["contact_info"]
+		self.assertLess(contact1["score"], 10)
+		self.assertIn("LinkedIn", contact1["explanation"])
+
+		# Case 2: Complete contact info
+		complete_resume = (
+			"Jane Doe\n"
+			"jane@example.com | +1 555-123-4567 | linkedin.com/in/janedoe | github.com/janedoe\n"
+			"Professional Summary\n"
+			"Python developer.\n"
+			"Technical Skills\n"
+			"Python\n"
+			"Education\n"
+			"Degree in Engineering."
+		)
+		analysis2 = analyze_resume_text(complete_resume, self.job)
+		contact2 = analysis2["category_scores"]["contact_info"]
+		self.assertEqual(contact2["score"], 10)
+
+

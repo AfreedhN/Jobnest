@@ -128,6 +128,36 @@ class ATSReport(models.Model):
         blank=True
     )
 
+    overall_analysis = models.TextField(
+        blank=True,
+        default=""
+    )
+
+    strengths = models.JSONField(
+        default=list,
+        blank=True
+    )
+
+    issues_found = models.JSONField(
+        default=list,
+        blank=True
+    )
+
+    category_scores = models.JSONField(
+        default=dict,
+        blank=True
+    )
+
+    jd_match_analysis = models.JSONField(
+        default=dict,
+        blank=True
+    )
+
+    good_lines = models.JSONField(
+        default=list,
+        blank=True
+    )
+
     created_at = models.DateTimeField(
         auto_now_add=True
     )

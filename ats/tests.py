@@ -217,3 +217,140 @@ class ATSAnalyzerViewTest(TestCase):
 
 		self.assertEqual(analysis["structure_score"], 0)
 		self.assertEqual(analysis["experience_score"], 0)
+
+	def test_line_by_line_feedback_and_grounded_rewrites(self):
+		sample_resume = (
+			"Professional Summary\n"
+			"I am a hardworking software engineer skilled in python and django.\n"
+			"Experience\n"
+			"Responsible for building REST APIs.\n"
+			"Education\n"
+			"Bachelor's degree in Computer Science.\n"
+			"Skills\n"
+			"Python, Django, SQL"
+		)
+		analysis = analyze_resume_text(sample_resume, self.job)
+
+		self.assertIn("line_improvements", analysis)
+		improvements = analysis["line_improvements"]
+		self.assertGreater(len(improvements), 0)
+
+		# Check line improvement schema
+		for item in improvements:
+			self.assertIn("section", item)
+			self.assertIn("current_line", item)
+			self.assertIn("problem", item)
+			self.assertIn("change_to", item)
+			self.assertIn("why_change_it", item)
+			self.assertIn("missing_keywords", item)
+
+		# Check that first person or buzzword is caught
+		problems = [item["problem"] for item in improvements]
+		self.assertTrue(any("first-person" in p or "buzzwords" in p or "passive" in p for p in problems))
+
+	def test_twelve_sections_and_clean_section_message(self):
+		sample_resume = (
+			"Contact Information\n"
+			"candidate@example.com | +1-555-0199 | linkedin.com/in/test | github.com/test\n"
+			"Professional Summary\n"
+			"Software engineer building reliable backend systems.\n"
+			"Technical Skills\n"
+			"Python, Django, PostgreSQL, Docker\n"
+			"Work Experience\n"
+			"Engineered microservices using Python and Django.\n"
+			"Education\n"
+			"Bachelor's degree in Computer Science.\n"
+			"Projects\n"
+			"Built JobNest portal using Django.\n"
+		)
+		analysis = analyze_resume_text(sample_resume, self.job)
+
+		self.assertIn("section_analysis", analysis)
+		sec_analysis = analysis["section_analysis"]
+
+		# Contact info should be clean
+		self.assertEqual(sec_analysis["contact_info"]["status"], "ok")
+		self.assertIn("No major issue detected", sec_analysis["contact_info"]["feedback"])
+
+		# Certifications (optional and not provided) should display no major issue detected
+		self.assertIn("No major issue detected", sec_analysis["certifications"]["feedback"])
+
+	def test_skills_categorized_into_buckets(self):
+		sample_resume = (
+			"Technical Skills\n"
+			"Python, JavaScript, Django, React, PostgreSQL, Docker, Git"
+		)
+		analysis = analyze_resume_text(sample_resume, self.job)
+
+		self.assertIn("skills_categorized", analysis)
+		cat = analysis["skills_categorized"]
+		self.assertIn("Programming Languages", cat)
+		self.assertIn("Python", cat["Programming Languages"])
+		self.assertIn("Frameworks & Libraries", cat)
+		self.assertIn("Django", cat["Frameworks & Libraries"])
+		self.assertIn("Databases", cat)
+		self.assertIn("PostgreSQL", cat["Databases"])
+
+	def test_deleting_resume_preserves_past_ats_reports(self):
+		report = ATSReport.objects.create(
+			user=self.user,
+			resume=self.resume,
+			resume_name=self.resume.title,
+			job=self.job,
+			overall_score=85,
+			skills_score=35,
+			experience_score=20,
+			keywords_score=15,
+			education_score=10,
+			structure_score=5,
+		)
+
+		self.assertEqual(report.resume, self.resume)
+		self.assertEqual(report.resume_name, self.resume.title)
+
+		# Delete resume
+		self.resume.delete()
+
+		# Refresh report from DB
+		report.refresh_from_db()
+		self.assertIsNone(report.resume)
+		self.assertEqual(report.resume_name, "My Resume")
+		# Verifying __str__ does not crash
+		self.assertIn(self.user.username, str(report))
+
+	def test_analysis_with_custom_job_description(self):
+		upload = SimpleUploadedFile(
+			"cloud-resume.docx",
+			make_docx(
+				"Contact\n"
+				"dev@test.com | 555-123-4567 | linkedin.com/in/dev | github.com/dev\n"
+				"Professional Summary\n"
+				"Cloud and DevOps engineer.\n"
+				"Skills\n"
+				"Docker, Kubernetes, AWS, Python\n"
+				"Experience\n"
+				"Maintained Kubernetes clusters and Docker containers.\n"
+				"Education\n"
+				"Bachelor's degree in Engineering."
+			),
+			content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+		)
+
+		response = self.client.post(
+			reverse("ats_analyzer"),
+			{
+				"resume_file": upload,
+				"analysis_mode": "custom",
+				"custom_job_title": "Site Reliability Engineer",
+				"custom_job_description": "We need an SRE experienced in Kubernetes, Docker, and AWS.",
+			},
+		)
+
+		self.assertEqual(response.status_code, 200)
+		report = ATSReport.objects.filter(user=self.user).first()
+		self.assertIsNotNone(report)
+		self.assertIsNone(report.job)
+		self.assertEqual(report.job_title_input, "Site Reliability Engineer")
+		self.assertIn("Kubernetes", report.matched_skills)
+		self.assertContains(response, "Site Reliability Engineer")
+

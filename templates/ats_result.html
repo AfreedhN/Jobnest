@@ -1,6 +1,11 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}ATS Result | JobNest{% endblock %}
+{% block title %}ATS Compatibility Report | JobNest{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/ats-analyzer.css' %}?v=2">
+{% endblock %}
 
 {% block content %}
 
@@ -10,135 +15,302 @@
 
     <div class="page-header">
 
-        <span class="section-label">JOBNEST ATS</span>
+        <span class="section-label">JOBNEST AI ATS REPORT</span>
 
         <h1>ATS Compatibility Report</h1>
 
         <p>
+            <i class="fa-regular fa-file-lines"></i>
             {% if report.resume %}
-                {{ report.resume.title|default:report.resume.resume_file.name|default:"Selected resume" }}
+                {{ report.resume.title|default:report.resume.resume_file.name|default:"Uploaded Resume" }}
             {% else %}
-                Selected resume
+                {{ report.resume_name|default:"Uploaded Resume" }}
             {% endif %}
-            ·
+            &nbsp;·&nbsp;
+            <i class="fa-solid fa-briefcase"></i>
             {% if report.job %}
-                {{ report.job.title|default:"Selected job" }}
+                {{ report.job.title }} {% if report.job.company %}({{ report.job.company.name }}){% endif %}
+            {% elif report.job_title_input %}
+                {{ report.job_title_input }} {% if report.job_company_name %}({{ report.job_company_name }}){% endif %}
             {% else %}
-                Selected job
+                General Industry Benchmark
             {% endif %}
+            &nbsp;·&nbsp;
+            <i class="fa-regular fa-clock"></i> {{ report.created_at|date:"M d, Y H:i" }}
         </p>
 
     </div>
 
+    <!-- Overall Score & Breakdown Hero -->
+    <div class="ats-report-hero">
 
-    <div class="ats-result-grid">
+        <div class="content-card ats-main-score-box">
 
-
-        <div class="score-card">
-
-            <div class="score-circle">
-
-                <strong>
-                    {{ report.overall_score }}
-                </strong>
-
-                <span>/100</span>
-
+            <div class="ats-score-dial {% if report.overall_score >= 75 %}dial-good{% elif report.overall_score >= 50 %}dial-average{% else %}dial-poor{% endif %}">
+                <strong>{{ report.overall_score }}</strong>
+                <span>/ 100</span>
             </div>
 
-            <h2>
-                JobNest ATS Compatibility Score
-            </h2>
+            <h2>Overall ATS Match</h2>
 
-            <p>
-                This is an estimated compatibility score,
-                not an official ATS score.
+            <span class="ats-score-badge {% if report.overall_score >= 75 %}badge-good{% elif report.overall_score >= 50 %}badge-average{% else %}badge-poor{% endif %}">
+                {% if report.overall_score >= 85 %}
+                    Excellent Alignment
+                {% elif report.overall_score >= 70 %}
+                    Strong Alignment
+                {% elif report.overall_score >= 50 %}
+                    Moderate Match - Needs Polish
+                {% else %}
+                    Low Match - Requires Revision
+                {% endif %}
+            </span>
+
+            <p style="margin-top: 14px; font-size: 12px; color: #647585;">
+                Scored using JobNest's composite ATS parsing engine against role criteria and industry recruiter standards.
             </p>
 
         </div>
-
 
         <div class="content-card">
 
             <h2>Score Breakdown</h2>
 
-
             <div class="score-row">
-
                 <div>
-                    <span>Skills</span>
+                    <span>Skills Match</span>
                     <strong>{{ report.skills_score }}/40</strong>
                 </div>
-
                 <div class="progress">
                     <span class="progress-fill" data-width="{% widthratio report.skills_score 40 100 %}"></span>
                 </div>
-
             </div>
 
-
             <div class="score-row">
-
                 <div>
-                    <span>Experience</span>
+                    <span>Experience Alignment</span>
                     <strong>{{ report.experience_score }}/25</strong>
                 </div>
-
                 <div class="progress">
                     <span class="progress-fill" data-width="{% widthratio report.experience_score 25 100 %}"></span>
                 </div>
-
             </div>
 
-
             <div class="score-row">
-
                 <div>
-                    <span>Keywords</span>
+                    <span>Keyword Density</span>
                     <strong>{{ report.keywords_score }}/20</strong>
                 </div>
-
                 <div class="progress">
                     <span class="progress-fill" data-width="{% widthratio report.keywords_score 20 100 %}"></span>
                 </div>
-
             </div>
 
-
             <div class="score-row">
-
                 <div>
-                    <span>Education</span>
+                    <span>Education Relevance</span>
                     <strong>{{ report.education_score }}/10</strong>
                 </div>
-
                 <div class="progress">
                     <span class="progress-fill" data-width="{% widthratio report.education_score 10 100 %}"></span>
                 </div>
-
             </div>
 
-
             <div class="score-row">
-
                 <div>
-                    <span>Structure</span>
+                    <span>Document Structure</span>
                     <strong>{{ report.structure_score }}/5</strong>
                 </div>
-
                 <div class="progress">
                     <span class="progress-fill" data-width="{% widthratio report.structure_score 5 100 %}"></span>
                 </div>
+            </div>
 
+            <div class="score-row">
+                <div>
+                    <span>ATS Formatting Health</span>
+                    <strong>{{ report.formatting_score|default:85 }}/100</strong>
+                </div>
+                <div class="progress">
+                    <span class="progress-fill" data-width="{{ report.formatting_score|default:85 }}"></span>
+                </div>
             </div>
 
         </div>
 
     </div>
 
+    <!-- Critical Blockers (If any) -->
+    {% if report.critical_issues %}
+    <div class="ats-critical-banner" role="alert">
+        <h3>
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            Critical ATS Blockers Detected ({{ report.critical_issues|length }})
+        </h3>
+        <ul>
+            {% for issue in report.critical_issues %}
+                <li>{{ issue }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
 
+
+    <!-- LINE-BY-LINE IMPROVEMENTS SECTION -->
+    <div class="ats-section-heading">
+        <h2>
+            <i class="fa-solid fa-pen-ruler" style="color: #176b5b;"></i>
+            Line-by-Line Resume Improvements
+        </h2>
+        <span class="badge-count">{{ report.line_improvements|length }} suggestions</span>
+    </div>
+
+    {% if report.line_improvements %}
+        <p style="margin-bottom: 20px; color: #5a6e7f; font-size: 13px;">
+            The analyzer examined each line of your uploaded resume. Below are the specific problematic lines, why they hurt your ATS score or recruiter perception, and exact fact-grounded rewrites you can copy directly into your resume:
+        </p>
+
+        {% for item in report.line_improvements %}
+        <div class="ats-line-card">
+
+            <div class="ats-line-card-header">
+                <span class="ats-line-section-pill">
+                    <i class="fa-regular fa-folder"></i> Section: {{ item.section }}
+                </span>
+                <span style="font-size: 11px; font-weight: 700; color: #c44040;">
+                    <i class="fa-solid fa-circle-exclamation"></i> Optimization Recommended
+                </span>
+            </div>
+
+            <div class="ats-line-diff-grid">
+
+                <div class="ats-diff-box box-current">
+                    <div class="ats-diff-label">
+                        <i class="fa-regular fa-circle-xmark"></i> Current Line (From Your Resume)
+                    </div>
+                    <div>"{{ item.current_line }}"</div>
+                </div>
+
+                <div class="ats-diff-box box-improved">
+                    <div class="ats-diff-label">
+                        <i class="fa-regular fa-circle-check"></i> Recommended ATS Replacement (Change To)
+                    </div>
+                    <div><strong>"{{ item.change_to }}"</strong></div>
+                </div>
+
+            </div>
+
+            <div class="ats-diff-details">
+
+                <div class="ats-diff-detail-item">
+                    <strong>Problem:</strong>
+                    <p>{{ item.problem }}</p>
+                </div>
+
+                <div class="ats-diff-detail-item">
+                    <strong>Why Change It:</strong>
+                    <p>{{ item.why_change_it }}</p>
+                </div>
+
+            </div>
+
+            {% if item.missing_keywords %}
+            <div class="ats-line-keywords-row">
+                <span class="kw-label">Target Keywords:</span>
+                {% for kw in item.missing_keywords %}
+                    <span class="ats-kw-chip">{{ kw }}</span>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+        </div>
+        {% endfor %}
+
+    {% else %}
+        <div class="content-card" style="padding: 24px; text-align: center;">
+            <i class="fa-solid fa-circle-check" style="font-size: 32px; color: #176b5b; margin-bottom: 12px;"></i>
+            <h3>No Problematic Lines Detected</h3>
+            <p style="color: #637788; margin: 0; font-size: 13px;">
+                Your bullet points demonstrate strong action verbs, standard third-person formatting, and proper technical casing.
+            </p>
+        </div>
+    {% endif %}
+
+
+    <!-- 12 SECTION-BY-SECTION ANALYSIS -->
+    <div class="ats-section-heading">
+        <h2>
+            <i class="fa-solid fa-list-check" style="color: #176b5b;"></i>
+            Section-by-Section Health Analysis (12 Core Sections)
+        </h2>
+    </div>
+
+    <div class="ats-sections-grid">
+
+        {% for sec_id, sec_data in report.section_analysis.items %}
+        <div class="ats-section-status-card status-{{ sec_data.status }}">
+
+            <div class="ats-sec-header">
+                <div class="ats-sec-title-group">
+                    <i class="fa-solid {{ sec_data.icon|default:'fa-folder' }}"></i>
+                    <strong>{{ sec_data.title }}</strong>
+                </div>
+
+                <span class="ats-sec-badge badge-{{ sec_data.status }}">
+                    {% if sec_data.status == 'ok' %}
+                        Clean
+                    {% elif sec_data.status == 'warning' %}
+                        Review
+                    {% else %}
+                        Missing
+                    {% endif %}
+                </span>
+            </div>
+
+            <p class="ats-sec-feedback">
+                {{ sec_data.feedback }}
+            </p>
+
+        </div>
+        {% endfor %}
+
+    </div>
+
+
+    <!-- TECHNICAL SKILLS CATEGORIZATION -->
+    <div class="ats-section-heading">
+        <h2>
+            <i class="fa-solid fa-laptop-code" style="color: #176b5b;"></i>
+            Categorized Technical Skills
+        </h2>
+    </div>
+
+    <div class="content-card" style="margin-bottom: 28px;">
+
+        {% if report.skills_categorized %}
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
+                {% for category, skill_list in report.skills_categorized.items %}
+                <div class="ats-skills-category-group">
+                    <h4>
+                        <i class="fa-solid fa-layer-group" style="color: #176b5b; font-size: 11px;"></i>
+                        {{ category }}
+                    </h4>
+                    <div class="skill-tags">
+                        {% for skill in skill_list %}
+                            <span>{{ skill }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p style="color: #6a7c8c; margin: 0;">No standard technical skills detected in the parsed text. Consider adding a dedicated 'Technical Skills' section.</p>
+        {% endif %}
+
+    </div>
+
+
+    <!-- KEYWORDS MATCHING & GAPS -->
     <div class="ats-details-grid">
-
 
         <div class="content-card">
 
@@ -147,15 +319,11 @@
             <div class="skill-tags">
 
                 {% for skill in report.matched_skills %}
-
                     <span class="matched">
-                        {{ skill }}
+                        <i class="fa-solid fa-check"></i> {{ skill }}
                     </span>
-
                 {% empty %}
-
-                    <p>No matching skills found.</p>
-
+                    <p style="color: #8c9ba5; font-size: 13px;">No direct target skills found in the resume.</p>
                 {% endfor %}
 
             </div>
@@ -170,15 +338,11 @@
             <div class="skill-tags">
 
                 {% for skill in report.missing_skills %}
-
                     <span class="missing">
-                        {{ skill }}
+                        <i class="fa-solid fa-plus"></i> {{ skill }}
                     </span>
-
                 {% empty %}
-
-                    <p>No major missing skills.</p>
-
+                    <p style="color: #176b5b; font-size: 13px;">All required core skills are present in your resume!</p>
                 {% endfor %}
 
             </div>
@@ -195,7 +359,7 @@
                 {% for keyword in report.matched_keywords %}
                     <li><i class="fa-solid fa-check"></i> {{ keyword|title }}</li>
                 {% empty %}
-                    <li>No job keywords found in the resume.</li>
+                    <li>No role keywords matched.</li>
                 {% endfor %}
 
             </ul>
@@ -210,36 +374,12 @@
             <ul class="simple-list">
 
                 {% for keyword in report.missing_keywords %}
-
                     <li>
-                        <i class="fa-solid fa-circle"></i>
+                        <i class="fa-solid fa-circle" style="font-size: 8px; color: #d97824;"></i>
                         {{ keyword|title }}
                     </li>
-
                 {% empty %}
-
-                    <li>No major missing keywords.</li>
-
-                {% endfor %}
-
-            </ul>
-
-        </div>
-
-
-        <div class="content-card">
-
-            <h2>Suggestions</h2>
-
-            <ul class="suggestion-list">
-
-                {% for suggestion in report.suggestions %}
-
-                    <li>
-                        <i class="fa-solid fa-check"></i>
-                        {{ suggestion }}
-                    </li>
-
+                    <li style="color: #176b5b;">All high-frequency job keywords matched!</li>
                 {% endfor %}
 
             </ul>
@@ -249,14 +389,74 @@
     </div>
 
 
-    <div class="center-action">
+    <!-- FORMATTING & ATS PARSING ANALYSIS -->
+    <div class="ats-section-heading">
+        <h2>
+            <i class="fa-solid fa-file-shield" style="color: #176b5b;"></i>
+            Formatting & ATS Parsing Diagnostics
+        </h2>
+    </div>
 
-        <a href="{% url 'ats_analyzer' %}"
-           class="btn-primary">
+    <div class="content-card" style="margin-bottom: 28px;">
 
-            Analyze Another Resume
+        {% if report.formatting_issues %}
+            <div class="ats-formatting-list">
+                {% for issue in report.formatting_issues %}
+                <div class="ats-format-item">
+                    <span class="ats-format-sev sev-{{ issue.severity|lower }}">
+                        {{ issue.severity }}
+                    </span>
+                    <div class="ats-format-body">
+                        <strong>{{ issue.category }}: {{ issue.issue }}</strong>
+                        <p><i class="fa-solid fa-wrench" style="color: #176b5b;"></i> <strong>Recommended Fix:</strong> {{ issue.fix }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p style="color: #176b5b; margin: 0;">
+                <i class="fa-solid fa-circle-check"></i> No formatting or ATS parsing issues detected! Your resume follows clean, ATS-compliant single-column formatting.
+            </p>
+        {% endif %}
 
+    </div>
+
+
+    <!-- ACTIONABLE IMPROVEMENT CHECKLIST -->
+    <div class="content-card" style="margin-bottom: 32px;">
+
+        <h2>
+            <i class="fa-solid fa-clipboard-check" style="color: #176b5b;"></i>
+            Actionable Optimization Checklist (To Reach 90+ Score)
+        </h2>
+
+        <div>
+            {% for item in report.improvement_checklist %}
+            <div class="ats-checklist-item">
+                <i class="fa-solid fa-circle-arrow-right"></i>
+                <div>{{ item }}</div>
+            </div>
+            {% empty %}
+                <p>Your resume is in top shape! Proceed to submit your application.</p>
+            {% endfor %}
+        </div>
+
+    </div>
+
+
+    <div class="center-action" style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;">
+
+        <a href="{% url 'ats_analyzer' %}" class="btn-primary">
+            <i class="fa-solid fa-rotate-left"></i> Analyze Another Resume
         </a>
+
+        <a href="{% url 'resume' %}" class="btn-secondary" style="background: #eef2f5; color: #2c4252; padding: 11px 20px; border-radius: 6px; font-weight: 600; text-decoration: none;">
+            <i class="fa-solid fa-folder-open"></i> View My Resumes
+        </a>
+
+        <button type="button" onclick="window.print()" class="btn-secondary" style="background: #eef2f5; color: #2c4252; padding: 11px 20px; border-radius: 6px; font-weight: 600; border: none; cursor: pointer;">
+            <i class="fa-solid fa-print"></i> Print / Save Report
+        </button>
 
     </div>
 
@@ -264,6 +464,9 @@
 
 </section>
 
+{% endblock %}
+
+{% block extra_js %}
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll(".progress-fill").forEach(function (bar) {
@@ -272,5 +475,4 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 </script>
-
 {% endblock %}

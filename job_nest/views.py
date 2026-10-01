@@ -374,19 +374,26 @@ def ats_analyzer(request):
     resumes = Resume.objects.filter(user=request.user).order_by('-uploaded_at')
     jobs = Job.objects.active().select_related('company')
     selected_resume_id = ''
-
     selected_job_id = ''
+    custom_job_title = ''
+    custom_job_description = ''
+    analysis_mode = 'job'
     error = None
 
     if request.method == 'POST':
-        selected_resume_id = request.POST.get('resume', '')
-        selected_job_id = request.POST.get('job', '')
+        selected_resume_id = request.POST.get('resume', '').strip()
+        selected_job_id = request.POST.get('job', '').strip()
+        custom_job_title = request.POST.get('custom_job_title', '').strip()
+        custom_job_description = request.POST.get('custom_job_description', '').strip()
+        analysis_mode = request.POST.get('analysis_mode', 'job')
         uploaded_resume = request.FILES.get('resume_file')
 
         resume = resumes.filter(pk=selected_resume_id).first() if selected_resume_id else None
-        job = jobs.filter(pk=selected_job_id).first()
+        job = jobs.filter(pk=selected_job_id).first() if selected_job_id else None
 
-        if not job:
+        if selected_job_id and not job:
+            error = 'Please choose a valid job.'
+        elif not job and not custom_job_description and analysis_mode == 'job' and not selected_job_id:
             error = 'Please choose a valid job.'
         elif uploaded_resume:
             if uploaded_resume.size > MAX_FILE_SIZE:
@@ -397,7 +404,12 @@ def ats_analyzer(request):
                 except ResumeTextError as parse_error:
                     error = str(parse_error)
                 else:
-                    analysis = analyze_resume_text(resume_text, job)
+                    analysis = analyze_resume_text(
+                        resume_text,
+                        job=job,
+                        custom_job_title=custom_job_title,
+                        custom_job_description=custom_job_description,
+                    )
                     with transaction.atomic():
                         resume = Resume.objects.create(
                             user=request.user,
@@ -408,7 +420,11 @@ def ats_analyzer(request):
                         report = ATSReport.objects.create(
                             user=request.user,
                             resume=resume,
+                            resume_name=resume.title,
                             job=job,
+                            job_title_input=custom_job_title or (job.title if job else "General ATS Analysis"),
+                            job_company_name=job.company.name if (job and getattr(job, "company", None)) else "",
+                            job_description_input=custom_job_description if not job else "",
                             **analysis,
                         )
                     return render(request, 'ats_result.html', {'report': report})
@@ -420,11 +436,20 @@ def ats_analyzer(request):
             except ResumeTextError as parse_error:
                 error = str(parse_error)
             else:
-                analysis = analyze_resume_text(resume_text, job)
+                analysis = analyze_resume_text(
+                    resume_text,
+                    job=job,
+                    custom_job_title=custom_job_title,
+                    custom_job_description=custom_job_description,
+                )
                 report = ATSReport.objects.create(
                     user=request.user,
                     resume=resume,
+                    resume_name=resume.title,
                     job=job,
+                    job_title_input=custom_job_title or (job.title if job else "General ATS Analysis"),
+                    job_company_name=job.company.name if (job and getattr(job, "company", None)) else "",
+                    job_description_input=custom_job_description if not job else "",
                     **analysis,
                 )
                 return render(request, 'ats_result.html', {'report': report})
@@ -437,6 +462,9 @@ def ats_analyzer(request):
             'jobs': jobs,
             'selected_resume_id': selected_resume_id,
             'selected_job_id': selected_job_id,
+            'custom_job_title': custom_job_title,
+            'custom_job_description': custom_job_description,
+            'analysis_mode': analysis_mode,
             'error': error,
         },
     )

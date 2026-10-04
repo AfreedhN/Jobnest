@@ -282,7 +282,9 @@ STATICFILES_DIRS = [
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 
-# WhiteNoise storage
+# Production-safe WhiteNoise storage
+# Compresses static files (gzip & brotli) and prevents
+# 'Missing staticfiles manifest entry' errors.
 STORAGES = {
     "default": {
         "BACKEND": (
@@ -293,10 +295,12 @@ STORAGES = {
     "staticfiles": {
         "BACKEND": (
             "whitenoise.storage."
-            "CompressedManifestStaticFilesStorage"
+            "CompressedStaticFilesStorage"
         ),
     },
 }
+
+WHITENOISE_MANIFEST_STRICT = False
 
 
 # ============================================================

@@ -1,0 +1,353 @@
+/* =========================================================
+   JOBNEST - AUTHENTICATION
+   ========================================================= */
+
+.auth-section {
+    min-height: calc(100vh - 72px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    background:
+        radial-gradient(circle at top left, rgba(37, 99, 235, 0.12), transparent 30%),
+        #f8fafc;
+}
+
+.auth-wrapper {
+    width: 100%;
+    max-width: 480px;
+}
+
+.auth-container {
+    width: 100%;
+    max-width: 700px;
+}
+
+.auth-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    padding: 38px;
+    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+}
+
+.auth-card.wide {
+    width: 100%;
+}
+
+.auth-card .form-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.auth-header .icon,
+.auth-header .auth-icon {
+    width: 55px;
+    height: 55px;
+    margin: 0 auto 15px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #dbeafe;
+    color: #2563eb;
+    font-size: 22px;
+}
+
+.auth-header h1 {
+    font-size: 28px;
+    color: #0f172a;
+    margin-bottom: 7px;
+}
+
+.auth-header p {
+    color: #64748b;
+    font-size: 14px;
+}
+
+.auth-card .form-group {
+    margin-bottom: 18px;
+}
+
+.auth-card .form-row .form-group {
+    min-width: 0;
+}
+
+.auth-card .field-error {
+    display: block;
+    margin-top: 5px;
+    color: #dc2626;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.auth-card .field-error:empty {
+    display: none;
+}
+
+.auth-card input[aria-invalid="true"],
+.auth-card select[aria-invalid="true"] {
+    border-color: #dc2626;
+}
+
+.auth-card .terms-error {
+    margin: -12px 0 15px;
+}
+
+.auth-card .form-error {
+    padding: 12px 16px;
+    background: #fef2f2;
+    border: 1px solid #fee2e2;
+    border-radius: 9px;
+    color: #991b1b;
+    margin-bottom: 18px;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+
+.auth-card label {
+    display: block;
+    margin-bottom: 7px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #334155;
+}
+
+.auth-card input,
+.auth-card select {
+    width: 100%;
+    padding: 13px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 9px;
+    outline: none;
+    background: #fff;
+    transition: 0.2s ease;
+}
+
+.auth-card input:focus,
+.auth-card select:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.auth-card .input-icon {
+    position: relative;
+}
+
+.auth-card .input-icon > i {
+    position: absolute;
+    top: 50%;
+    right: 14px;
+    z-index: 1;
+    width: 16px;
+    transform: translateY(-50%);
+    color: #64748b;
+    text-align: center;
+    pointer-events: none;
+}
+
+.auth-card .input-icon input {
+    padding-right: 42px;
+}
+
+.auth-card .input-icon input[type="password"] {
+    padding-right: 84px;
+}
+
+.auth-card .input-icon--password > i {
+    right: 52px;
+}
+
+.auth-card .password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    z-index: 2;
+    display: grid;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    transform: translateY(-50%);
+    place-items: center;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    color: #64748b;
+}
+
+.auth-card .password-toggle:hover {
+    background: #f1f5f9;
+    color: #2563eb;
+}
+
+.auth-card .form-options {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin: 4px 0 20px;
+}
+
+.auth-card .form-options .checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    color: #475569;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.auth-card .form-options .checkbox-label input[type="checkbox"] {
+    flex: 0 0 16px;
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    padding: 0;
+    accent-color: #2563eb;
+}
+
+.auth-card .checkbox-label.terms {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 0 0 18px;
+    color: #475569;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.auth-card .checkbox-label.terms input[type="checkbox"] {
+    flex: 0 0 16px;
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    padding: 0;
+    accent-color: #2563eb;
+}
+
+.auth-card .form-options > a {
+    color: #2563eb;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: right;
+}
+
+.password-wrapper {
+    position: relative;
+}
+
+.password-wrapper input {
+    padding-right: 45px;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 13px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    background: transparent;
+    color: #64748b;
+}
+
+.auth-submit {
+    width: 100%;
+    margin-top: 5px;
+}
+
+.auth-submit-center {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+
+.auth-footer {
+    text-align: center;
+    margin-top: 22px;
+    color: #64748b;
+    font-size: 14px;
+}
+
+.auth-footer a {
+    color: #2563eb;
+    font-weight: 700;
+}
+
+.auth-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 25px 0;
+    color: #94a3b8;
+    font-size: 12px;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+    content: "";
+    height: 1px;
+    flex: 1;
+    background: #e2e8f0;
+}
+
+.account-type-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.account-option {
+    position: relative;
+}
+
+.account-option input {
+    position: absolute;
+    opacity: 0;
+}
+
+.account-option label {
+    padding: 15px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.account-option input:checked + label {
+    border-color: #2563eb;
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+@media (max-width: 500px) {
+
+    .auth-card {
+        padding: 25px;
+    }
+
+    .auth-card .form-row {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    .auth-card .name-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .account-type-grid {
+        grid-template-columns: 1fr;
+    }
+}

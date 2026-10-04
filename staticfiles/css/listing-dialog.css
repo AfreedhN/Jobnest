@@ -1,0 +1,205 @@
+.listing-dialog {
+    width: min(760px, calc(100% - 32px));
+    max-width: none;
+    max-height: min(90dvh, 900px);
+    margin: auto;
+    padding: 0;
+    overflow: auto;
+    border: 1px solid #dce5e9;
+    border-radius: 9px;
+    background: #fff;
+    color: #263b48;
+    box-shadow: 0 24px 70px rgba(15, 35, 48, .25);
+}
+
+.listing-dialog::backdrop {
+    background: rgba(16, 34, 43, .56);
+    backdrop-filter: blur(2px);
+}
+
+.listing-dialog__header {
+    position: sticky;
+    z-index: 2;
+    top: 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 21px 24px 17px;
+    border-bottom: 1px solid #e7edf0;
+    background: #fff;
+}
+
+.listing-dialog__header h2 {
+    margin: 0 0 4px;
+    color: #1b3441;
+    font-size: 22px;
+    line-height: 1.25;
+}
+
+.listing-dialog__header > div > p:last-child {
+    color: #6c7c86;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.listing-dialog__close {
+    display: grid;
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    place-items: center;
+    border: 1px solid #dfe7eb;
+    border-radius: 6px;
+    background: #fff;
+    color: #566975;
+    cursor: pointer;
+}
+
+.listing-dialog__close:hover {
+    border-color: #bacbd1;
+    background: #f6f8f9;
+}
+
+.listing-dialog__form {
+    padding: 20px 24px 22px;
+}
+
+.listing-dialog__fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 15px 16px;
+}
+
+.listing-dialog__field {
+    display: grid;
+    min-width: 0;
+    align-content: start;
+    gap: 6px;
+}
+
+.listing-dialog__field--wide {
+    grid-column: 1 / -1;
+}
+
+.listing-dialog__field label {
+    color: #334b58;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.listing-dialog__field input,
+.listing-dialog__field select,
+.listing-dialog__field textarea {
+    width: 100%;
+    min-width: 0;
+    border: 1px solid #d6e0e5;
+    border-radius: 5px;
+    background: #fff;
+    color: #243c49;
+    font: inherit;
+    font-size: 13px;
+}
+
+.listing-dialog__field input,
+.listing-dialog__field select {
+    min-height: 40px;
+    padding: 8px 10px;
+}
+
+.listing-dialog__field textarea {
+    min-height: 86px;
+    padding: 9px 10px;
+    resize: vertical;
+}
+
+.listing-dialog__field input:focus,
+.listing-dialog__field select:focus,
+.listing-dialog__field textarea:focus {
+    border-color: #5c9b91;
+    outline: 3px solid rgba(40, 117, 100, .12);
+}
+
+.listing-dialog__field small {
+    color: #75848d;
+    font-size: 11px;
+}
+
+.listing-dialog__error {
+    color: #b42318;
+    font-size: 11px;
+}
+
+.listing-dialog__footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #e7edf0;
+}
+
+.listing-dialog__footer button {
+    min-height: 40px;
+    border: 0;
+    font: inherit;
+    cursor: pointer;
+}
+
+.listing-dialog__footer .job-board__add,
+.listing-dialog__footer .company-directory__add {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 9px 14px;
+    border-radius: 6px;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.listing-dialog__cancel {
+    padding: 8px 13px;
+    border: 1px solid #d8e1e5 !important;
+    border-radius: 6px;
+    background: #fff;
+    color: #526571;
+    font-size: 12px !important;
+}
+
+.listing-dialog__cancel:hover {
+    background: #f6f8f9;
+}
+
+.job-board__header-actions > button,
+.company-directory__actions > button {
+    border: 0;
+    font: inherit;
+    cursor: pointer;
+}
+
+@media (max-width: 600px) {
+    .listing-dialog {
+        width: calc(100% - 20px);
+        max-height: 94dvh;
+    }
+
+    .listing-dialog__header {
+        padding: 17px 16px 14px;
+    }
+
+    .listing-dialog__form {
+        padding: 16px;
+    }
+
+    .listing-dialog__fields {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 12px;
+    }
+
+    .listing-dialog__field--wide {
+        grid-column: auto;
+    }
+}

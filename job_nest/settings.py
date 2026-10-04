@@ -198,17 +198,45 @@ WSGI_APPLICATION = "job_nest.wsgi.application"
 # DB_HOST
 # DB_PORT
 
-DATABASE_URL = os.environ.get("DATABASE_URL")
+DATABASE_URL = (
+    os.environ.get("DATABASE_URL")
+    or os.environ.get("INTERNAL_DATABASE_URL")
+    or os.environ.get("EXTERNAL_DATABASE_URL")
+    or os.environ.get("RENDER_DATABASE_URL")
+    or os.environ.get("DB_URL")
+)
 
 if DATABASE_URL:
+    DATABASE_URL = DATABASE_URL.strip().strip("'\"")
+    # Enable SSL for remote databases (e.g. Render), disable for local testing
+    is_local_db = "127.0.0.1" in DATABASE_URL or "localhost" in DATABASE_URL
     DATABASES = {
         "default": dj_database_url.parse(
             DATABASE_URL,
             conn_max_age=600,
-            ssl_require=True,
+            conn_health_checks=True,
+            ssl_require=not is_local_db,
         )
     }
 else:
+    # Detect if running in Render production without DATABASE_URL
+    is_render = bool(
+        os.environ.get("RENDER")
+        or os.environ.get("RENDER_EXTERNAL_HOSTNAME")
+    )
+    if is_render and os.environ.get("DB_HOST", "127.0.0.1") in ("127.0.0.1", "localhost"):
+        import sys
+        print(
+            "\n" + "=" * 70 + "\n"
+            "CRITICAL: DATABASE_URL is not configured in Render Environment Variables!\n"
+            "Render web services do not run a local PostgreSQL instance on 127.0.0.1.\n"
+            "Please go to your Render Web Service > Environment tab and add:\n"
+            "  Key:   DATABASE_URL\n"
+            "  Value: (Paste your Render PostgreSQL database's Internal Database URL)\n"
+            + "=" * 70 + "\n",
+            file=sys.stderr,
+        )
+
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",

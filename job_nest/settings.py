@@ -233,46 +233,25 @@ WSGI_APPLICATION = "job_nest.wsgi.application"
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
-
 if DATABASE_URL:
-
     DATABASES = {
         "default": dj_database_url.parse(
             DATABASE_URL,
             conn_max_age=600,
+            ssl_require=True,
         )
     }
-
 else:
-
-    # Local PostgreSQL database
-
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
-            "NAME": os.environ.get(
-                "DB_NAME",
-                "jobs",
-            ),
-            "USER": os.environ.get(
-                "DB_USER",
-                "postgres",
-            ),
-            "PASSWORD": os.environ.get(
-                "DB_PASSWORD",
-                "",
-            ),
-            "HOST": os.environ.get(
-                "DB_HOST",
-                "localhost",
-            ),
-            "PORT": os.environ.get(
-                "DB_PORT",
-                "5432",
-            ),
+            "NAME": os.environ.get("DB_NAME", "jobs"),
+            "USER": os.environ.get("DB_USER", "postgres"),
+            "PASSWORD": os.environ.get("DB_PASSWORD", ""),
+            "HOST": os.environ.get("DB_HOST", "127.0.0.1"),
+            "PORT": os.environ.get("DB_PORT", "5432"),
         }
     }
-
 
 # ============================================================
 # PASSWORD VALIDATION

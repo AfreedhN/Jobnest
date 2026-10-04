@@ -27,6 +27,12 @@ urlpatterns = [
     ),
 
     path(
+        "<int:pk>/view/",
+        views.view_resume,
+        name="view_resume"
+    ),
+
+    path(
         "<int:pk>/download/",
         views.download_resume,
         name="download_resume"

@@ -105,9 +105,15 @@
                             {% if application.resume %}
                             <span class="seeker-app-meta-item">
                                 <i class="fa-regular fa-file-pdf" aria-hidden="true"></i>
-                                <a href="{{ application.resume.resume_file.url }}" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: underline;" title="View submitted resume">
-                                    Resume: {{ application.resume.title|default:application.resume.resume_file.name|cut:"resumes/"|truncatechars:24 }}
-                                </a>
+                                {% if application.resume.file_exists %}
+                                    <a href="{{ application.resume.resume_file.url }}" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: underline;" title="View submitted resume">
+                                        Resume: {{ application.resume.title|default:application.resume.resume_file.name|cut:"resumes/"|truncatechars:24 }}
+                                    </a>
+                                {% else %}
+                                    <span style="color: #dc2626; font-weight: 500;" title="The uploaded resume file is missing from the server storage">
+                                        Resume: {{ application.resume.title|default:application.resume.resume_file.name|cut:"resumes/"|truncatechars:20 }} <span style="font-size: 11px; background: #fee2e2; color: #b91c1c; padding: 2px 6px; border-radius: 4px; margin-left: 4px;">File not found</span>
+                                    </span>
+                                {% endif %}
                             </span>
                             {% endif %}
                         </div>

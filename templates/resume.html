@@ -142,19 +142,31 @@
 
                 <!-- Action Toolbar -->
                 <div class="resume-card-actions">
-                    <a href="{{ resume.resume_file.url }}"
-                       target="_blank"
-                       rel="noopener noreferrer"
-                       class="resume-btn resume-btn-view"
-                       title="View resume in new tab">
-                        <i class="fa-solid fa-eye"></i> View
-                    </a>
+                    {% if resume.file_exists %}
+                        <a href="{{ resume.resume_file.url }}"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           class="resume-btn resume-btn-view"
+                           title="View resume in new tab">
+                            <i class="fa-solid fa-eye"></i> View
+                        </a>
 
-                    <a href="{% url 'resumes:download_resume' resume.id %}"
-                       class="resume-btn resume-btn-download"
-                       title="Download resume file">
-                        <i class="fa-solid fa-download"></i> Download
-                    </a>
+                        <a href="{% url 'resumes:download_resume' resume.id %}"
+                           class="resume-btn resume-btn-download"
+                           title="Download resume file">
+                            <i class="fa-solid fa-download"></i> Download
+                        </a>
+                    {% else %}
+                        <span class="resume-missing-warning" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; font-size: 12px; font-weight: 600; color: #dc2626; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px;">
+                            <i class="fa-solid fa-triangle-exclamation"></i> File not found on server
+                        </span>
+                        <a href="{% url 'resume_upload' %}"
+                           class="resume-btn resume-btn-view"
+                           style="background: #2563eb; color: #fff;"
+                           title="Re-upload resume">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Re-upload
+                        </a>
+                    {% endif %}
 
                     {% if not resume.is_primary %}
                         <form method="post" action="{% url 'set_primary_resume' resume.id %}" style="display: inline;">

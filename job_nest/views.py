@@ -1,17 +1,21 @@
 import os
+import mimetypes
 
 from django import forms
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.http import FileResponse, Http404
 from django.views.decorators.http import require_POST
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils._os import safe_join
 from django.utils.http import url_has_allowed_host_and_scheme
 
 from adm.models import Profile
@@ -479,6 +483,8 @@ def ats_analyzer(request):
                     return render(request, 'ats_result.html', {'report': report})
         elif not resume:
             error = 'Choose a saved resume or upload a PDF or DOCX resume.'
+        elif not resume.file_exists:
+            error = f'The selected resume "{resume.title or resume.file_name()}" is missing from the server. Please upload your resume directly.'
         else:
             try:
                 resume_text = extract_resume_text(resume)
@@ -575,6 +581,8 @@ def apply_view(request, job_id=None):
             resume = resumes.filter(pk=resume_id).first()
             if not resume:
                 error = 'Choose a saved resume or upload a PDF, DOC, or DOCX file.'
+            elif not resume.file_exists:
+                error = f'The selected resume "{resume.title or resume.file_name()}" is missing from the server. Please upload a new resume file below.'
 
         if error:
             return render(
@@ -813,3 +821,42 @@ def edit_profile(request):
         return redirect("profile")
 
     return render(request, "edit_profile.html", {"profile": profile})
+
+
+def serve_media(request, path):
+    """
+    Safely serves uploaded media files (resumes, company logos, etc.) in both
+    local development and Render production environments.
+    If the requested file does not exist on disk, renders a friendly
+    'Resume File Not Found' page instead of throwing an unhandled Http404.
+    """
+    try:
+        fullpath = safe_join(settings.MEDIA_ROOT, path)
+    except Exception:
+        raise Http404("Invalid media path.")
+
+    if os.path.exists(fullpath) and os.path.isfile(fullpath):
+        content_type, encoding = mimetypes.guess_type(fullpath)
+        content_type = content_type or "application/octet-stream"
+        response = FileResponse(open(fullpath, "rb"), content_type=content_type)
+        if content_type in ("application/pdf", "image/png", "image/jpeg", "image/webp", "image/gif", "image/svg+xml"):
+            response["Content-Disposition"] = f'inline; filename="{os.path.basename(fullpath)}"'
+        else:
+            response["Content-Disposition"] = f'attachment; filename="{os.path.basename(fullpath)}"'
+        if encoding:
+            response["Content-Encoding"] = encoding
+        return response
+
+    filename = os.path.basename(path)
+    is_resume = "resume" in path.lower() or path.lower().endswith((".pdf", ".doc", ".docx"))
+    return render(
+        request,
+        "media_not_found.html",
+        {
+            "filename": filename,
+            "path": path,
+            "is_resume": is_resume,
+        },
+        status=404,
+    )
+

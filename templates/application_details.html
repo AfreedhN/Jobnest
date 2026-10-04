@@ -90,9 +90,15 @@
                         <i class="fa-solid fa-file-lines"></i>
                         <h3>Applicant Resume</h3>
                     </div>
-                    <span style="font-size: 11px; font-weight: 700; color: #059669; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 3px 9px; border-radius: 20px;">
-                        <i class="fa-solid fa-circle-check"></i> Verified File
-                    </span>
+                    {% if application.resume.file_exists %}
+                        <span style="font-size: 11px; font-weight: 700; color: #059669; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 3px 9px; border-radius: 20px;">
+                            <i class="fa-solid fa-circle-check"></i> Available
+                        </span>
+                    {% else %}
+                        <span style="font-size: 11px; font-weight: 700; color: #dc2626; background: #fef2f2; border: 1px solid #fecaca; padding: 3px 9px; border-radius: 20px;">
+                            <i class="fa-solid fa-triangle-exclamation"></i> File Missing
+                        </span>
+                    {% endif %}
                 </div>
 
                 <div class="recruiter-resume-details-box">
@@ -122,19 +128,32 @@
                 </div>
 
                 <div class="recruiter-resume-btn-row">
-                    <a href="{{ application.resume.resume_file.url }}"
-                       target="_blank"
-                       rel="noopener noreferrer"
-                       class="recruiter-resume-btn btn-view"
-                       title="View resume in a new tab">
-                        <i class="fa-solid fa-eye"></i> View Resume
-                    </a>
+                    {% if application.resume.file_exists %}
+                        <a href="{{ application.resume.resume_file.url }}"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           class="recruiter-resume-btn btn-view"
+                           title="View resume in a new tab">
+                            <i class="fa-solid fa-eye"></i> View Resume
+                        </a>
 
-                    <a href="{% url 'resumes:download_resume' application.resume.id %}"
-                       class="recruiter-resume-btn btn-download"
-                       title="Download candidate's resume">
-                        <i class="fa-solid fa-download"></i> Download Resume
-                    </a>
+                        <a href="{% url 'resumes:download_resume' application.resume.id %}"
+                           class="recruiter-resume-btn btn-download"
+                           title="Download candidate's resume">
+                            <i class="fa-solid fa-download"></i> Download Resume
+                        </a>
+                    {% else %}
+                        <button type="button"
+                                class="recruiter-resume-btn btn-view"
+                                disabled
+                                style="opacity: 0.65; cursor: not-allowed; background: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1;"
+                                title="Resume file not found on the server">
+                            <i class="fa-solid fa-circle-exclamation"></i> Resume File Not Found
+                        </button>
+                        <span style="font-size: 13px; color: #64748b; align-self: center;">
+                            The file is missing from server storage. Contact candidate: <strong>{{ application.applicant.email }}</strong>
+                        </span>
+                    {% endif %}
                 </div>
 
             </div>

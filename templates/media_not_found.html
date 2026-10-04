@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Resume File Not Found | JobNest{% endblock %}
+
+{% block extra_css %}
+<style>
+.media-not-found-wrapper {
+    padding: 60px 20px;
+    min-height: calc(100vh - 220px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8fafc;
+}
+
+.media-not-found-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 48px 36px;
+    max-width: 580px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+}
+
+.media-not-found-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 24px;
+    background: #fef2f2;
+    border: 2px solid #fecaca;
+    color: #ef4444;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+}
+
+.media-not-found-title {
+    font-size: 24px;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 12px;
+}
+
+.media-not-found-desc {
+    font-size: 15px;
+    color: #475569;
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+.media-file-badge {
+    display: inline-block;
+    padding: 6px 14px;
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-family: monospace;
+    font-size: 13px;
+    color: #334155;
+    word-break: break-all;
+    margin-bottom: 24px;
+}
+
+.media-not-found-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 12px;
+}
+
+.btn-media-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 22px;
+    background: #2563eb;
+    color: #ffffff !important;
+    font-weight: 600;
+    font-size: 14px;
+    border-radius: 10px;
+    text-decoration: none;
+    transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.btn-media-primary:hover {
+    background: #1d4ed8;
+    transform: translateY(-1px);
+}
+
+.btn-media-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 22px;
+    background: #f1f5f9;
+    color: #334155 !important;
+    font-weight: 600;
+    font-size: 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    text-decoration: none;
+    transition: background 0.2s ease;
+}
+
+.btn-media-secondary:hover {
+    background: #e2e8f0;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="media-not-found-wrapper">
+    <div class="media-not-found-card">
+        <div class="media-not-found-icon">
+            <i class="fa-solid fa-file-circle-xmark"></i>
+        </div>
+
+        <h1 class="media-not-found-title">
+            {% if is_resume %}Resume File Not Found{% else %}File Not Found{% endif %}
+        </h1>
+
+        <p class="media-not-found-desc">
+            The requested document is not present on the server storage. This can occur if the file was deleted or if the server was restarted.
+        </p>
+
+        {% if filename %}
+        <div>
+            <span class="media-file-badge">
+                <i class="fa-regular fa-file"></i> {{ filename }}
+            </span>
+        </div>
+        {% endif %}
+
+        <div class="media-not-found-actions">
+            {% if user.is_authenticated %}
+                {% if user.profile.account_type == 'recruiter' %}
+                    <a href="{% url 'recruiter_dashboard' %}" class="btn-media-primary">
+                        <i class="fa-solid fa-gauge-high"></i> Recruiter Dashboard
+                    </a>
+                {% else %}
+                    <a href="{% url 'resume' %}" class="btn-media-primary">
+                        <i class="fa-solid fa-file-invoice"></i> My Resumes
+                    </a>
+                    <a href="{% url 'resume_upload' %}" class="btn-media-secondary">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Upload New Resume
+                    </a>
+                {% endif %}
+            {% else %}
+                <a href="{% url 'home' %}" class="btn-media-primary">
+                    <i class="fa-solid fa-house"></i> Home
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

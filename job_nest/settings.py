@@ -339,6 +339,10 @@ MEDIA_URL = "/media/"
 
 MEDIA_ROOT = BASE_DIR / "media"
 
+# Automatically ensure upload directories exist for local development & Render
+os.makedirs(MEDIA_ROOT / "resumes", exist_ok=True)
+os.makedirs(MEDIA_ROOT / "company_logos", exist_ok=True)
+
 
 # ============================================================
 # DEFAULT PRIMARY KEY

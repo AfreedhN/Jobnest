@@ -1,13 +1,17 @@
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
-from django.urls import path, include
+from django.urls import path, re_path, include
 from django.urls import reverse_lazy
 from django.conf import settings
-from django.conf.urls.static import static
 
 from companies.views import company_detail as company_detail_view
 from jobs.views import job_detail as job_detail_view
-from resumes.views import delete_resume as delete_resume_view, set_primary_resume as set_primary_resume_view
+from resumes.views import (
+    delete_resume as delete_resume_view,
+    set_primary_resume as set_primary_resume_view,
+    view_resume as view_resume_view,
+    download_resume as download_resume_view,
+)
 from .forms import JobNestPasswordResetForm
 from . import views
 
@@ -74,14 +78,13 @@ urlpatterns = [
     path("manage-applicants/", views.manage_applicants, name="manage_applicants"),
     path("applications/<int:pk>/", views.application_details, name="application_details"),
     path("applications/<int:pk>/update-status/", views.update_application_status, name="update_application_status"),
+    path("resumes/<int:pk>/view/", view_resume_view, name="view_resume"),
+    path("resumes/<int:pk>/download/", download_resume_view, name="download_resume"),
     path("resumes/<int:pk>/delete/", delete_resume_view, name="delete_resume"),
     path("resumes/<int:pk>/primary/", set_primary_resume_view, name="set_primary_resume"),
     path("my-applications/", views.my_applications, name="my_applications"),
     path("recruiter-dashboard/", views.recruiter_dashboard, name="recruiter_dashboard"),
-]
 
-if settings.DEBUG:
-    urlpatterns += static(
-        settings.MEDIA_URL,
-        document_root=settings.MEDIA_ROOT
-    )
+    # Safely serve uploaded media files in development and production (Render)
+    re_path(r"^media/(?P<path>.*)$", views.serve_media, name="serve_media"),
+]

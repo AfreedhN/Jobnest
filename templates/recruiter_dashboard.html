@@ -205,9 +205,15 @@
 
                         <div class="recruiter-applicant-right">
                             {% if application.resume %}
-                                <a href="{{ application.resume.resume_file.url }}" target="_blank" rel="noopener noreferrer" class="recruiter-resume-pill-sm" title="View candidate resume">
-                                    <i class="fa-regular fa-file-pdf"></i> Resume
-                                </a>
+                                {% if application.resume.file_exists %}
+                                    <a href="{{ application.resume.resume_file.url }}" target="_blank" rel="noopener noreferrer" class="recruiter-resume-pill-sm" title="View candidate resume">
+                                        <i class="fa-regular fa-file-pdf"></i> Resume
+                                    </a>
+                                {% else %}
+                                    <span class="no-resume-tag-sm" style="color: #dc2626; border-color: #fecaca; background: #fef2f2;" title="Resume file not found on server">
+                                        <i class="fa-solid fa-triangle-exclamation"></i> File Missing
+                                    </span>
+                                {% endif %}
                             {% endif %}
 
                             <span class="recruiter-date-pill">
@@ -283,9 +289,15 @@
 
                         <div class="recruiter-applicant-right">
                             {% if application.resume %}
-                                <a href="{{ application.resume.resume_file.url }}" target="_blank" rel="noopener noreferrer" class="recruiter-resume-pill-sm" title="View candidate resume">
-                                    <i class="fa-regular fa-file-pdf"></i> Resume
-                                </a>
+                                {% if application.resume.file_exists %}
+                                    <a href="{{ application.resume.resume_file.url }}" target="_blank" rel="noopener noreferrer" class="recruiter-resume-pill-sm" title="View candidate resume">
+                                        <i class="fa-regular fa-file-pdf"></i> Resume
+                                    </a>
+                                {% else %}
+                                    <span class="no-resume-tag-sm" style="color: #dc2626; border-color: #fecaca; background: #fef2f2;" title="Resume file not found on server">
+                                        <i class="fa-solid fa-triangle-exclamation"></i> File Missing
+                                    </span>
+                                {% endif %}
                             {% else %}
                                 <span class="no-resume-tag-sm"><i class="fa-solid fa-xmark"></i> No Resume</span>
                             {% endif %}
@@ -453,14 +465,20 @@
                                 <!-- Resume -->
                                 <td>
                                     {% if application.resume %}
-                                        <a href="{{ application.resume.resume_file.url }}"
-                                           target="_blank"
-                                           rel="noopener noreferrer"
-                                           class="resume-action-pill"
-                                           title="Download or View Resume">
-                                            <i class="fa-regular fa-file-pdf"></i>
-                                            <span>View Resume</span>
-                                        </a>
+                                        {% if application.resume.file_exists %}
+                                            <a href="{{ application.resume.resume_file.url }}"
+                                               target="_blank"
+                                               rel="noopener noreferrer"
+                                               class="resume-action-pill"
+                                               title="Download or View Resume">
+                                                <i class="fa-regular fa-file-pdf"></i>
+                                                <span>View Resume</span>
+                                            </a>
+                                        {% else %}
+                                            <span class="no-resume-tag" style="color: #dc2626; border-color: #fecaca; background: #fef2f2;" title="Resume file not found on server">
+                                                <i class="fa-solid fa-triangle-exclamation"></i> File Missing
+                                            </span>
+                                        {% endif %}
                                     {% else %}
                                         <span class="no-resume-tag">
                                             <i class="fa-solid fa-circle-xmark"></i> No Resume

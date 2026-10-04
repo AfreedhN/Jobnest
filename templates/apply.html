@@ -52,9 +52,10 @@
                     <p class="apply-form__hint">Select one, or upload a new file below.</p>
                     <div class="apply-resume-list">
                         {% for resume in resumes %}
-                            <label class="apply-resume-option">
+                            <label class="apply-resume-option {% if not resume.file_exists %}is-missing-file{% endif %}" {% if not resume.file_exists %}style="opacity: 0.7; border-color: #fecaca; background: #fff5f5;"{% endif %}>
                                 <input type="radio" name="resume" value="{{ resume.id }}"
-                                       {% if resume.is_primary %}checked{% endif %}>
+                                       {% if resume.is_primary and resume.file_exists %}checked{% endif %}
+                                       {% if not resume.file_exists %}disabled{% endif %}>
                                 <span class="apply-resume-option__icon" aria-hidden="true">
                                     <i class="fa-solid fa-file-lines"></i>
                                 </span>
@@ -63,6 +64,9 @@
                                     <small>
                                         {% if resume.is_primary %}Primary resume · {% endif %}
                                         Uploaded {{ resume.uploaded_at|date:"d M Y" }}
+                                        {% if not resume.file_exists %}
+                                            · <span style="color: #dc2626; font-weight: 600;">(File missing on server - please upload a new file below)</span>
+                                        {% endif %}
                                     </small>
                                 </span>
                                 <span class="apply-resume-option__radio" aria-hidden="true"></span>

@@ -58,3 +58,28 @@ class Resume(models.Model):
             return ""
 
         return self.resume_file.name.split("/")[-1]
+
+    @property
+    def file_exists(self):
+        """
+        Check if the physical file actually exists in storage.
+        Prevents 404 errors when a database record points to a missing file.
+        """
+        if not self.resume_file:
+            return False
+        try:
+            return self.resume_file.storage.exists(self.resume_file.name)
+        except Exception:
+            return False
+
+    @property
+    def safe_url(self):
+        """
+        Returns file URL if file exists, else empty string.
+        """
+        if not self.file_exists:
+            return ""
+        try:
+            return self.resume_file.url
+        except Exception:
+            return ""

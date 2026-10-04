@@ -1,7 +1,9 @@
 import os
+import mimetypes
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
 
@@ -197,33 +199,92 @@ def resume_detail(request, pk):
     )
 
 
+def user_can_access_resume(user, resume):
+    if not user.is_authenticated:
+        return False
+    if user.is_staff or user.is_superuser:
+        return True
+    if resume.user_id == user.id:
+        return True
+    from applications.models import Application
+    return Application.objects.filter(resume=resume, job__recruiter=user).exists()
+
+
 @login_required
-def download_resume(request, pk):
+def view_resume(request, pk):
+    resume = get_object_or_404(Resume, pk=pk)
 
-    resume = get_object_or_404(
-        Resume,
-        pk=pk,
-        user=request.user
-    )
+    if not user_can_access_resume(request.user, resume):
+        raise PermissionDenied("You are not authorized to view this resume.")
 
-    if not resume.resume_file:
-        raise Http404("Resume file not found.")
+    if not resume.resume_file or not resume.file_exists:
+        return render(
+            request,
+            "media_not_found.html",
+            {
+                "filename": resume.file_name(),
+                "resume": resume,
+                "is_resume": True,
+            },
+            status=404,
+        )
 
     try:
+        content_type, _ = mimetypes.guess_type(resume.resume_file.name)
+        content_type = content_type or "application/pdf"
+        response = FileResponse(
+            resume.resume_file.open("rb"),
+            content_type=content_type,
+            filename=resume.file_name(),
+        )
+        response["Content-Disposition"] = f'inline; filename="{resume.file_name()}"'
+        return response
+    except (FileNotFoundError, OSError):
+        return render(
+            request,
+            "media_not_found.html",
+            {
+                "filename": resume.file_name(),
+                "resume": resume,
+                "is_resume": True,
+            },
+            status=404,
+        )
 
+
+@login_required
+def download_resume(request, pk):
+    resume = get_object_or_404(Resume, pk=pk)
+
+    if not user_can_access_resume(request.user, resume):
+        raise PermissionDenied("You are not authorized to download this resume.")
+
+    if not resume.resume_file or not resume.file_exists:
+        messages.error(
+            request,
+            f"Resume file '{resume.file_name()}' was not found on the server. The file may have been moved or removed."
+        )
+        from applications.models import Application
+        if Application.objects.filter(resume=resume, job__recruiter=request.user).exists():
+            return redirect("recruiter_dashboard")
+        return redirect("resume")
+
+    try:
         response = FileResponse(
             resume.resume_file.open("rb"),
             as_attachment=True,
-            filename=resume.file_name()
+            filename=resume.file_name(),
         )
-
         return response
-
-    except FileNotFoundError:
-
-        raise Http404(
-            "Resume file not found."
+    except (FileNotFoundError, OSError):
+        messages.error(
+            request,
+            f"Resume file '{resume.file_name()}' could not be opened on the server."
         )
+        from applications.models import Application
+        if Application.objects.filter(resume=resume, job__recruiter=request.user).exists():
+            return redirect("recruiter_dashboard")
+        return redirect("resume")
 
 
 @login_required

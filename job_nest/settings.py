@@ -28,7 +28,7 @@ load_dotenv(BASE_DIR / ".env")
 
 SECRET_KEY = os.environ.get(
     "SECRET_KEY",
-    "django-insecure-jobnest-local-development-key",
+    "django-insecure-jobnest-development-key",
 )
 
 
@@ -36,16 +36,7 @@ SECRET_KEY = os.environ.get(
 # DEBUG
 # ============================================================
 
-# Local development:
-# DEBUG=True
-#
-# Render production:
-# DEBUG=False
-
-DEBUG = os.environ.get(
-    "DEBUG",
-    "False",
-).lower() in (
+DEBUG = os.environ.get("DEBUG", "False").lower() in (
     "true",
     "1",
     "t",
@@ -57,6 +48,8 @@ DEBUG = os.environ.get(
 # ALLOWED HOSTS
 # ============================================================
 
+render_hostname = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
+
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
@@ -64,37 +57,18 @@ ALLOWED_HOSTS = [
     "jobnest-5lvh.onrender.com",
 ]
 
-# Render automatically provides this variable.
-# Example:
-# jobnest-5lvh.onrender.com
+if render_hostname:
+    ALLOWED_HOSTS.append(render_hostname)
 
-RENDER_EXTERNAL_HOSTNAME = os.environ.get(
-    "RENDER_EXTERNAL_HOSTNAME"
-)
+extra_hosts = os.environ.get("EXTRA_ALLOWED_HOSTS", "") or os.environ.get("ALLOWED_HOSTS", "")
 
-if RENDER_EXTERNAL_HOSTNAME:
-    ALLOWED_HOSTS.append(
-        RENDER_EXTERNAL_HOSTNAME
-    )
-
-
-# Additional hosts can be manually supplied
-# through the ALLOWED_HOSTS environment variable.
-
-EXTRA_ALLOWED_HOSTS = os.environ.get(
-    "ALLOWED_HOSTS",
-    "",
-)
-
-if EXTRA_ALLOWED_HOSTS:
+if extra_hosts:
     ALLOWED_HOSTS.extend(
         host.strip()
-        for host in EXTRA_ALLOWED_HOSTS.split(",")
+        for host in extra_hosts.split(",")
         if host.strip()
     )
 
-
-# Remove duplicates
 ALLOWED_HOSTS = list(dict.fromkeys(ALLOWED_HOSTS))
 
 
@@ -102,32 +76,25 @@ ALLOWED_HOSTS = list(dict.fromkeys(ALLOWED_HOSTS))
 # CSRF TRUSTED ORIGINS
 # ============================================================
 
-CSRF_TRUSTED_ORIGINS = []
+CSRF_TRUSTED_ORIGINS = [
+    "https://jobnest-5lvh.onrender.com",
+]
 
-if RENDER_EXTERNAL_HOSTNAME:
+if render_hostname:
     CSRF_TRUSTED_ORIGINS.append(
-        f"https://{RENDER_EXTERNAL_HOSTNAME}"
+        f"https://{render_hostname}"
     )
 
+extra_csrf_origins = os.environ.get("EXTRA_CSRF_ORIGINS", "") or os.environ.get("CSRF_TRUSTED_ORIGINS", "")
 
-# Additional trusted origins
-EXTRA_CSRF_ORIGINS = os.environ.get(
-    "CSRF_TRUSTED_ORIGINS",
-    "",
-)
-
-if EXTRA_CSRF_ORIGINS:
+if extra_csrf_origins:
     CSRF_TRUSTED_ORIGINS.extend(
         origin.strip()
-        for origin in EXTRA_CSRF_ORIGINS.split(",")
+        for origin in extra_csrf_origins.split(",")
         if origin.strip()
     )
 
-
-# Remove duplicates
-CSRF_TRUSTED_ORIGINS = list(
-    dict.fromkeys(CSRF_TRUSTED_ORIGINS)
-)
+CSRF_TRUSTED_ORIGINS = list(dict.fromkeys(CSRF_TRUSTED_ORIGINS))
 
 
 # ============================================================
@@ -378,6 +345,10 @@ SESSION_SAVE_EVERY_REQUEST = True
 # ============================================================
 # HTTPS / PRODUCTION SECURITY
 # ============================================================
+
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = "DENY"
+SECURE_REFERRER_POLICY = "same-origin"
 
 if not DEBUG:
 

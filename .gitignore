@@ -26,8 +26,9 @@ media/
 *.sqlite3
 *.db
 
-# IDE & OS
+# IDE, Vercel & OS
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
+.vercel/

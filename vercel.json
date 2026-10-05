@@ -1,0 +1,9 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "bash build.sh",
+  "functions": {
+    "job_nest/wsgi.py": {
+      "maxDuration": 60
+    }
+  }
+}

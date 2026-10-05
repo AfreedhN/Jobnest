@@ -49,16 +49,29 @@ DEBUG = os.environ.get("DEBUG", "False").lower() in (
 # ============================================================
 
 render_hostname = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
+vercel_url = os.environ.get("VERCEL_URL")
+vercel_prod_url = os.environ.get("VERCEL_PROJECT_PRODUCTION_URL")
+vercel_branch_url = os.environ.get("VERCEL_BRANCH_URL")
 
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
     "[::1]",
+    ".vercel.app",  # Matches all Vercel deployment URLs and previews
     "jobnest-5lvh.onrender.com",
 ]
 
 if render_hostname:
     ALLOWED_HOSTS.append(render_hostname)
+
+if vercel_url:
+    ALLOWED_HOSTS.append(vercel_url)
+
+if vercel_prod_url:
+    ALLOWED_HOSTS.append(vercel_prod_url)
+
+if vercel_branch_url:
+    ALLOWED_HOSTS.append(vercel_branch_url)
 
 extra_hosts = os.environ.get("EXTRA_ALLOWED_HOSTS", "") or os.environ.get("ALLOWED_HOSTS", "")
 
@@ -77,6 +90,7 @@ ALLOWED_HOSTS = list(dict.fromkeys(ALLOWED_HOSTS))
 # ============================================================
 
 CSRF_TRUSTED_ORIGINS = [
+    "https://*.vercel.app",  # Wildcard for all Vercel deployments and previews
     "https://jobnest-5lvh.onrender.com",
 ]
 
@@ -84,6 +98,15 @@ if render_hostname:
     CSRF_TRUSTED_ORIGINS.append(
         f"https://{render_hostname}"
     )
+
+if vercel_url:
+    CSRF_TRUSTED_ORIGINS.append(f"https://{vercel_url}")
+
+if vercel_prod_url:
+    CSRF_TRUSTED_ORIGINS.append(f"https://{vercel_prod_url}")
+
+if vercel_branch_url:
+    CSRF_TRUSTED_ORIGINS.append(f"https://{vercel_branch_url}")
 
 extra_csrf_origins = os.environ.get("EXTRA_CSRF_ORIGINS", "") or os.environ.get("CSRF_TRUSTED_ORIGINS", "")
 
@@ -200,53 +223,70 @@ WSGI_APPLICATION = "job_nest.wsgi.application"
 
 DATABASE_URL = (
     os.environ.get("DATABASE_URL")
+    or os.environ.get("POSTGRES_URL")
+    or os.environ.get("POSTGRES_URL_NON_POOLING")
     or os.environ.get("INTERNAL_DATABASE_URL")
     or os.environ.get("EXTERNAL_DATABASE_URL")
     or os.environ.get("RENDER_DATABASE_URL")
     or os.environ.get("DB_URL")
 )
 
+is_vercel = bool(os.environ.get("VERCEL"))
+is_render = bool(
+    os.environ.get("RENDER")
+    or os.environ.get("RENDER_EXTERNAL_HOSTNAME")
+)
+
 if DATABASE_URL:
     DATABASE_URL = DATABASE_URL.strip().strip("'\"")
-    # Enable SSL for remote databases (e.g. Render), disable for local testing
+    # Enable SSL for remote databases (e.g. Render, Neon, Supabase), disable for local testing
     is_local_db = "127.0.0.1" in DATABASE_URL or "localhost" in DATABASE_URL
+    # For serverless (Vercel Functions), conn_max_age=0 prevents exhausting connections.
+    # For long-running servers (Render/Gunicorn), conn_max_age=600 reuses connections.
+    conn_max_age = 0 if is_vercel else 600
     DATABASES = {
         "default": dj_database_url.parse(
             DATABASE_URL,
-            conn_max_age=600,
+            conn_max_age=conn_max_age,
             conn_health_checks=True,
             ssl_require=not is_local_db,
         )
     }
 else:
-    # Detect if running in Render production without DATABASE_URL
-    is_render = bool(
-        os.environ.get("RENDER")
-        or os.environ.get("RENDER_EXTERNAL_HOSTNAME")
-    )
-    if is_render and os.environ.get("DB_HOST", "127.0.0.1") in ("127.0.0.1", "localhost"):
-        import sys
-        print(
-            "\n" + "=" * 70 + "\n"
-            "CRITICAL: DATABASE_URL is not configured in Render Environment Variables!\n"
-            "Render web services do not run a local PostgreSQL instance on 127.0.0.1.\n"
-            "Please go to your Render Web Service > Environment tab and add:\n"
-            "  Key:   DATABASE_URL\n"
-            "  Value: (Paste your Render PostgreSQL database's Internal Database URL)\n"
-            + "=" * 70 + "\n",
-            file=sys.stderr,
-        )
-
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": os.environ.get("DB_NAME", "jobs"),
-            "USER": os.environ.get("DB_USER", "postgres"),
-            "PASSWORD": os.environ.get("DB_PASSWORD", ""),
-            "HOST": os.environ.get("DB_HOST", "127.0.0.1"),
-            "PORT": os.environ.get("DB_PORT", "5432"),
+    # If running in Vercel build environment without DATABASE_URL,
+    # fallback to sqlite so collectstatic succeeds without crashing.
+    if is_vercel:
+        DATABASES = {
+            "default": {
+                "ENGINE": "django.db.backends.sqlite3",
+                "NAME": BASE_DIR / "db.sqlite3",
+            }
         }
-    }
+    else:
+        # Detect if running in Render production without DATABASE_URL
+        if is_render and os.environ.get("DB_HOST", "127.0.0.1") in ("127.0.0.1", "localhost"):
+            import sys
+            print(
+                "\n" + "=" * 70 + "\n"
+                "CRITICAL: DATABASE_URL is not configured in Render Environment Variables!\n"
+                "Render web services do not run a local PostgreSQL instance on 127.0.0.1.\n"
+                "Please go to your Render Web Service > Environment tab and add:\n"
+                "  Key:   DATABASE_URL\n"
+                "  Value: (Paste your Render PostgreSQL database's Internal Database URL)\n"
+                + "=" * 70 + "\n",
+                file=sys.stderr,
+            )
+
+        DATABASES = {
+            "default": {
+                "ENGINE": "django.db.backends.postgresql",
+                "NAME": os.environ.get("DB_NAME", "jobs"),
+                "USER": os.environ.get("DB_USER", "postgres"),
+                "PASSWORD": os.environ.get("DB_PASSWORD", ""),
+                "HOST": os.environ.get("DB_HOST", "127.0.0.1"),
+                "PORT": os.environ.get("DB_PORT", "5432"),
+            }
+        }
 
 # ============================================================
 # PASSWORD VALIDATION
@@ -337,11 +377,19 @@ WHITENOISE_MANIFEST_STRICT = False
 
 MEDIA_URL = "/media/"
 
-MEDIA_ROOT = BASE_DIR / "media"
+# On Vercel serverless runtime, the root directory is read-only.
+# Ephemeral uploads can be written to /tmp/media if cloud storage is not yet attached.
+if is_vercel:
+    MEDIA_ROOT = Path("/tmp") / "media"
+else:
+    MEDIA_ROOT = BASE_DIR / "media"
 
-# Automatically ensure upload directories exist for local development & Render
-os.makedirs(MEDIA_ROOT / "resumes", exist_ok=True)
-os.makedirs(MEDIA_ROOT / "company_logos", exist_ok=True)
+# Automatically ensure upload directories exist (with safety for read-only environments)
+try:
+    os.makedirs(MEDIA_ROOT / "resumes", exist_ok=True)
+    os.makedirs(MEDIA_ROOT / "company_logos", exist_ok=True)
+except OSError:
+    pass
 
 
 # ============================================================
@@ -386,17 +434,16 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "DENY"
 SECURE_REFERRER_POLICY = "same-origin"
 
-if not DEBUG:
-
-    # Render is behind a proxy.
+# Proxy SSL Header: both Render and Vercel are behind reverse proxies terminating HTTPS
+if not DEBUG or is_vercel:
     SECURE_PROXY_SSL_HEADER = (
         "HTTP_X_FORWARDED_PROTO",
         "https",
     )
 
+if not DEBUG:
     # Secure cookies
     SESSION_COOKIE_SECURE = True
-
     CSRF_COOKIE_SECURE = True
 
 

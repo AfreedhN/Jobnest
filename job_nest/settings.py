@@ -22,18 +22,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
 
-SECRET_KEY = os.environ.get("SECRET_KEY")
-
-DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
-
-ALLOWED_HOSTS = [
-    "localhost",
-    "127.0.0.1",
-    ".vercel.app",
-    ".onrender.com",
-]
-
-
 # ============================================================
 # SECURITY
 # ============================================================
@@ -70,6 +58,8 @@ ALLOWED_HOSTS = [
     "127.0.0.1",
     "[::1]",
     ".vercel.app",  # Matches all Vercel deployment URLs and previews
+    ".onrender.com",  # Matches all Render web service domains
+    "jobnest-9xgc.onrender.com",
     "jobnest-5lvh.onrender.com",
 ]
 
@@ -103,6 +93,8 @@ ALLOWED_HOSTS = list(dict.fromkeys(ALLOWED_HOSTS))
 
 CSRF_TRUSTED_ORIGINS = [
     "https://*.vercel.app",  # Wildcard for all Vercel deployments and previews
+    "https://*.onrender.com",  # Wildcard for all Render subdomains
+    "https://jobnest-9xgc.onrender.com",
     "https://jobnest-5lvh.onrender.com",
 ]
 
@@ -289,14 +281,24 @@ else:
                 file=sys.stderr,
             )
 
+        db_host = os.environ.get("DB_HOST", "127.0.0.1")
+        is_remote_host = db_host not in ("127.0.0.1", "localhost")
+        db_options = {}
+        if is_remote_host:
+            db_options["sslmode"] = "require"
+
+        conn_max_age = 0 if is_vercel else 600
+
         DATABASES = {
             "default": {
                 "ENGINE": "django.db.backends.postgresql",
                 "NAME": os.environ.get("DB_NAME", "jobs"),
                 "USER": os.environ.get("DB_USER", "postgres"),
                 "PASSWORD": os.environ.get("DB_PASSWORD", ""),
-                "HOST": os.environ.get("DB_HOST", "127.0.0.1"),
+                "HOST": db_host,
                 "PORT": os.environ.get("DB_PORT", "5432"),
+                "CONN_MAX_AGE": conn_max_age,
+                "OPTIONS": db_options,
             }
         }
 
